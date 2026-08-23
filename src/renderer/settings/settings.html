@@ -8,150 +8,151 @@
   <link rel="stylesheet" href="settings.css" />
 </head>
 <body>
+  <!--
+    THESIS: Breath Console makes a twice-daily health routine feel like a calm, dependable instrument and refuses the category's teal glass card stack.
+    OWN-WORLD: warm paper workspace, charcoal equipment rail, clay actions, sage confirmation, thin rules, and one authored inhaler illustration.
+    STORY: set morning and evening windows, tune notification behavior, confirm preferences, then let the app recede into the Windows tray.
+    FIRST VIEWPORT: a narrow object rail anchors the left edge; schedule leads the ruled workspace; notification and preference controls follow; tray behavior closes the frame.
+    FORM: compact equipment ledger, user-pinned direction, seed 26ff0634.
+    FINISH: unreviewed and undocumented is unfinished; this build ends with the finish review, the verdict, DESIGN.md, and every shipping raster carrying its provenance
+  -->
   <div class="app">
+    <aside class="app-rail" aria-labelledby="railName">
+      <svg class="brand-mark" viewBox="0 0 28 28" fill="none" aria-hidden="true">
+        <circle cx="14" cy="14" r="3" fill="currentColor" />
+        <path d="M14 2v7M14 19v7M2 14h7M19 14h7M5.5 5.5l5 5M17.5 17.5l5 5M22.5 5.5l-5 5M10.5 17.5l-5 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+      </svg>
+      <div class="rail-name" id="railName" data-i18n="app.name">Inhaler</div>
+      <div class="rail-rule" aria-hidden="true"></div>
+      <div class="rail-meta" data-i18n="settings.localTray">Local Windows Tray</div>
+      <img class="rail-art" src="../../../assets/inhaler-illustration.png" alt="" aria-hidden="true" />
+    </aside>
 
-    <header class="header">
-      <div class="brand">
-        <div class="logo" aria-hidden="true">
-          <svg viewBox="0 0 24 24" fill="none">
-            <path d="M3 12h4l2-5 4 10 2-5h6" stroke="#ffffff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" />
-          </svg>
-        </div>
+    <div class="workspace">
+      <header class="header">
         <h1 class="title" data-i18n="settings.title">Settings</h1>
-      </div>
-      <div class="saved" id="savedIndicator" role="status" aria-live="polite">
-        <svg class="saved-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-          <path d="M20 6 9 17l-5-5" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" />
-        </svg>
-        <span data-i18n="settings.saved">Saved</span>
-      </div>
-    </header>
-
-    <main class="content">
-
-      <section class="card">
-        <h2 class="section-title" data-i18n="settings.schedule">Schedule</h2>
-
-        <div class="schedule-block">
-          <div class="block-header">
-            <span class="block-title">
-              <span class="dot dot-morning" aria-hidden="true"></span>
-              <span data-i18n="settings.morning">Morning</span>
-            </span>
-            <div class="switch-row">
-              <span class="switch-label" data-i18n="settings.enabled">Enabled</span>
-              <label class="switch">
-                <input type="checkbox" id="morningEnabled" />
-                <span class="slider"></span>
-              </label>
-            </div>
-          </div>
-          <div class="time-row">
-            <div class="field">
-              <label for="morningStart" data-i18n="settings.from">From</label>
-              <input type="time" id="morningStart" />
-            </div>
-            <div class="field">
-              <label for="morningEnd" data-i18n="settings.to">To</label>
-              <input type="time" id="morningEnd" />
-            </div>
-          </div>
-        </div>
-
-        <div class="schedule-block">
-          <div class="block-header">
-            <span class="block-title">
-              <span class="dot dot-evening" aria-hidden="true"></span>
-              <span data-i18n="settings.evening">Evening</span>
-            </span>
-            <div class="switch-row">
-              <span class="switch-label" data-i18n="settings.enabled">Enabled</span>
-              <label class="switch">
-                <input type="checkbox" id="eveningEnabled" />
-                <span class="slider"></span>
-              </label>
-            </div>
-          </div>
-          <div class="time-row">
-            <div class="field">
-              <label for="eveningStart" data-i18n="settings.from">From</label>
-              <input type="time" id="eveningStart" />
-            </div>
-            <div class="field">
-              <label for="eveningEnd" data-i18n="settings.to">To</label>
-              <input type="time" id="eveningEnd" />
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <section class="card">
-        <h2 class="section-title" data-i18n="settings.notifications">Notifications</h2>
-
-        <div class="field">
-          <label for="snooze" data-i18n="settings.snooze">Remind later after (min)</label>
-          <input type="number" id="snooze" min="1" max="180" step="1" />
-        </div>
-
-        <div class="field">
-          <label for="grace" data-i18n="settings.grace">Catch-up window (min)</label>
-          <input type="number" id="grace" min="0" max="360" step="1" />
-        </div>
-
-        <div class="hint">
-          <svg class="hint-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-            <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="2" />
-            <path d="M12 11v5" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
-            <circle cx="12" cy="8" r="1.1" fill="currentColor" />
+        <div class="saved" id="savedIndicator" role="status" aria-live="polite">
+          <svg class="saved-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path d="M20 6 9 17l-5-5" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" />
           </svg>
-          <p data-i18n="settings.graceHint">If you were away from the computer during the interval, the app will remind you within this time after it ends.</p>
+          <span data-i18n="settings.saved">Saved</span>
         </div>
-      </section>
+      </header>
 
-      <section class="card">
-        <h2 class="section-title" id="prefsTitle" data-i18n="settings.preferences">Preferences</h2>
+      <main class="content">
+        <section class="section">
+          <h2 class="section-title" data-i18n="settings.schedule">Schedule</h2>
 
-        <div class="pref-row">
-          <span class="pref-label" data-i18n="settings.sound">Notification sound</span>
-          <label class="switch">
-            <input type="checkbox" id="soundEnabled" />
-            <span class="slider"></span>
-          </label>
-        </div>
-
-        <div class="pref-row">
-          <span class="pref-label" data-i18n="settings.language">Language</span>
-          <div class="select-wrap">
-            <select id="language">
-              <option value="ru">Русский</option>
-              <option value="en">English</option>
-            </select>
+          <div class="schedule-block">
+            <div class="block-header">
+              <div>
+                <div class="block-title" id="morningLabel" data-i18n="settings.morning">Morning</div>
+                <div class="block-note" data-i18n="settings.enabled">Enabled</div>
+              </div>
+            </div>
+            <div class="time-row">
+              <div class="field">
+                <label for="morningStart" data-i18n="settings.from">From</label>
+                <input type="time" id="morningStart" />
+              </div>
+              <svg class="time-arrow" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M2 8h10M9 5l3 3-3 3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" /></svg>
+              <div class="field">
+                <label for="morningEnd" data-i18n="settings.to">To</label>
+                <input type="time" id="morningEnd" />
+              </div>
+            </div>
+            <label class="switch">
+              <input type="checkbox" id="morningEnabled" aria-labelledby="morningLabel" />
+              <span class="slider"></span>
+            </label>
           </div>
+
+          <div class="schedule-block">
+            <div class="block-header">
+              <div>
+                <div class="block-title" id="eveningLabel" data-i18n="settings.evening">Evening</div>
+                <div class="block-note" data-i18n="settings.enabled">Enabled</div>
+              </div>
+            </div>
+            <div class="time-row">
+              <div class="field">
+                <label for="eveningStart" data-i18n="settings.from">From</label>
+                <input type="time" id="eveningStart" />
+              </div>
+              <svg class="time-arrow" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M2 8h10M9 5l3 3-3 3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" /></svg>
+              <div class="field">
+                <label for="eveningEnd" data-i18n="settings.to">To</label>
+                <input type="time" id="eveningEnd" />
+              </div>
+            </div>
+            <label class="switch">
+              <input type="checkbox" id="eveningEnabled" aria-labelledby="eveningLabel" />
+              <span class="slider"></span>
+            </label>
+          </div>
+        </section>
+
+        <section class="section">
+          <h2 class="section-title" data-i18n="settings.notifications">Notifications</h2>
+          <div class="number-grid">
+            <div class="field">
+              <label for="snooze" data-i18n="settings.snooze">Remind later after (min)</label>
+              <input type="number" id="snooze" min="1" max="180" step="1" />
+            </div>
+            <div class="field">
+              <label for="grace" data-i18n="settings.grace">Catch-up window (min)</label>
+              <input type="number" id="grace" min="0" max="360" step="1" />
+            </div>
+          </div>
+          <div class="hint">
+            <svg class="hint-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="2" />
+              <path d="M12 11v5" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+              <circle cx="12" cy="8" r="1.1" fill="currentColor" />
+            </svg>
+            <p data-i18n="settings.graceHint">If you were away from the computer during the interval, the app will remind you within this time after it ends.</p>
+          </div>
+        </section>
+
+        <section class="section preferences">
+          <h2 class="section-title" id="prefsTitle" data-i18n="settings.preferences">Preferences</h2>
+          <div class="pref-row">
+            <span class="pref-label" id="soundLabel" data-i18n="settings.sound">Notification sound</span>
+            <label class="switch">
+              <input type="checkbox" id="soundEnabled" aria-labelledby="soundLabel" />
+              <span class="slider"></span>
+            </label>
+          </div>
+          <div class="pref-row">
+            <label class="pref-label" for="language" data-i18n="settings.language">Language</label>
+            <div class="select-wrap">
+              <select id="language">
+                <option value="ru">Русский</option>
+                <option value="en">English</option>
+              </select>
+            </div>
+          </div>
+          <div class="pref-row">
+            <span class="pref-label" id="autostartLabel" data-i18n="settings.autostart">Start with Windows</span>
+            <label class="switch">
+              <input type="checkbox" id="autostart" aria-labelledby="autostartLabel" />
+              <span class="slider"></span>
+            </label>
+          </div>
+        </section>
+      </main>
+
+      <footer class="footer">
+        <div class="hint-row">
+          <svg class="footer-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <rect x="4" y="5" width="16" height="14" rx="2" stroke="currentColor" stroke-width="2" />
+            <path d="M8 12h8" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+          </svg>
+          <span data-i18n="settings.minimizeHint">Closing hides the window to the system tray</span>
         </div>
-
-        <div class="pref-row">
-          <span class="pref-label" data-i18n="settings.autostart">Start with Windows</span>
-          <label class="switch">
-            <input type="checkbox" id="autostart" />
-            <span class="slider"></span>
-          </label>
-        </div>
-      </section>
-
-    </main>
-
-    <footer class="footer">
-      <div class="hint-row">
-        <svg class="hint-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-          <rect x="4" y="4" width="16" height="16" rx="4" stroke="currentColor" stroke-width="2" />
-          <path d="M8 12h8" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
-          <path d="M12 12v4" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
-        </svg>
-        <span data-i18n="settings.minimizeHint">Closing hides the window to the system tray</span>
-      </div>
-      <button type="button" class="btn-quit" id="quitBtn" data-i18n="settings.quit">Quit</button>
-    </footer>
-
+        <button type="button" class="btn-quit" id="quitBtn" data-i18n="settings.quit">Quit</button>
+      </footer>
+    </div>
   </div>
 
   <script src="settings.js"></script>

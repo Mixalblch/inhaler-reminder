@@ -20,6 +20,7 @@ module.exports = {
   'settings.saved': 'Saved',
   'settings.minimizeHint': 'Closing hides the window to the system tray',
   'settings.quit': 'Quit',
+  'settings.localTray': 'Local\nWindows\nTray',
 
   'notif.title': 'Time to use your inhaler',
   'notif.morning': 'Morning dose',

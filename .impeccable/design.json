@@ -1,0 +1,124 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-08-23T21:15:56.2275323Z",
+  "title": "Design System: Inhaler Reminder",
+  "extensions": {
+    "colorMeta": {
+      "paper": { "role": "neutral", "displayName": "Workshop Paper", "canonical": "#f2efe7", "tonalRamp": ["oklch(15% 0.015 85)", "oklch(27% 0.015 85)", "oklch(39% 0.015 85)", "oklch(51% 0.015 85)", "oklch(63% 0.015 85)", "oklch(75% 0.015 85)", "oklch(87% 0.015 85)", "oklch(95% 0.015 85)"] },
+      "paper-high": { "role": "neutral", "displayName": "Raised Paper", "canonical": "#fbf8f0", "tonalRamp": ["oklch(15% 0.012 85)", "oklch(27% 0.012 85)", "oklch(39% 0.012 85)", "oklch(51% 0.012 85)", "oklch(63% 0.012 85)", "oklch(75% 0.012 85)", "oklch(87% 0.012 85)", "oklch(95% 0.012 85)"] },
+      "paper-low": { "role": "neutral", "displayName": "Tray Paper", "canonical": "#e8e3d9", "tonalRamp": ["oklch(15% 0.016 80)", "oklch(27% 0.016 80)", "oklch(39% 0.016 80)", "oklch(51% 0.016 80)", "oklch(63% 0.016 80)", "oklch(75% 0.016 80)", "oklch(87% 0.016 80)", "oklch(95% 0.016 80)"] },
+      "ink": { "role": "neutral", "displayName": "Charcoal Equipment Ink", "canonical": "#28251f", "tonalRamp": ["oklch(15% 0.012 75)", "oklch(27% 0.012 75)", "oklch(39% 0.012 75)", "oklch(51% 0.012 75)", "oklch(63% 0.012 75)", "oklch(75% 0.012 75)", "oklch(87% 0.012 75)", "oklch(95% 0.012 75)"] },
+      "clay": { "role": "primary", "displayName": "Fired Clay", "canonical": "#c45f42", "tonalRamp": ["oklch(15% 0.11 40)", "oklch(27% 0.11 40)", "oklch(39% 0.11 40)", "oklch(51% 0.11 40)", "oklch(63% 0.11 40)", "oklch(75% 0.11 40)", "oklch(87% 0.11 40)", "oklch(95% 0.11 40)"] },
+      "clay-dark": { "role": "primary", "displayName": "Deep Clay", "canonical": "#8f432f", "tonalRamp": ["oklch(15% 0.09 40)", "oklch(27% 0.09 40)", "oklch(39% 0.09 40)", "oklch(51% 0.09 40)", "oklch(63% 0.09 40)", "oklch(75% 0.09 40)", "oklch(87% 0.09 40)", "oklch(95% 0.09 40)"] },
+      "sage": { "role": "secondary", "displayName": "Quiet Sage", "canonical": "#61705c", "tonalRamp": ["oklch(15% 0.035 140)", "oklch(27% 0.035 140)", "oklch(39% 0.035 140)", "oklch(51% 0.035 140)", "oklch(63% 0.035 140)", "oklch(75% 0.035 140)", "oklch(87% 0.035 140)", "oklch(95% 0.035 140)"] },
+      "line": { "role": "neutral", "displayName": "Rule", "canonical": "#c8c0b4", "tonalRamp": ["oklch(15% 0.015 70)", "oklch(27% 0.015 70)", "oklch(39% 0.015 70)", "oklch(51% 0.015 70)", "oklch(63% 0.015 70)", "oklch(75% 0.015 70)", "oklch(87% 0.015 70)", "oklch(95% 0.015 70)"] },
+      "line-strong": { "role": "neutral", "displayName": "Strong Rule", "canonical": "#aea598", "tonalRamp": ["oklch(15% 0.018 70)", "oklch(27% 0.018 70)", "oklch(39% 0.018 70)", "oklch(51% 0.018 70)", "oklch(63% 0.018 70)", "oklch(75% 0.018 70)", "oklch(87% 0.018 70)", "oklch(95% 0.018 70)"] },
+      "notification-line": { "role": "neutral", "displayName": "Notification Rule", "canonical": "#b8afa2", "tonalRamp": ["oklch(15% 0.018 70)", "oklch(27% 0.018 70)", "oklch(39% 0.018 70)", "oklch(51% 0.018 70)", "oklch(63% 0.018 70)", "oklch(75% 0.018 70)", "oklch(87% 0.018 70)", "oklch(95% 0.018 70)"] },
+      "muted": { "role": "neutral", "displayName": "Graphite Muted", "canonical": "#6f685e", "tonalRamp": ["oklch(15% 0.018 70)", "oklch(27% 0.018 70)", "oklch(39% 0.018 70)", "oklch(51% 0.018 70)", "oklch(63% 0.018 70)", "oklch(75% 0.018 70)", "oklch(87% 0.018 70)", "oklch(95% 0.018 70)"] },
+      "danger": { "role": "tertiary", "displayName": "Reserved Red", "canonical": "#9b4139", "tonalRamp": ["oklch(15% 0.09 25)", "oklch(27% 0.09 25)", "oklch(39% 0.09 25)", "oklch(51% 0.09 25)", "oklch(63% 0.09 25)", "oklch(75% 0.09 25)", "oklch(87% 0.09 25)", "oklch(95% 0.09 25)"] },
+      "control-surface": { "role": "neutral", "displayName": "Control Porcelain", "canonical": "#fffdf7", "tonalRamp": ["oklch(15% 0.008 85)", "oklch(27% 0.008 85)", "oklch(39% 0.008 85)", "oklch(51% 0.008 85)", "oklch(63% 0.008 85)", "oklch(75% 0.008 85)", "oklch(87% 0.008 85)", "oklch(95% 0.008 85)"] },
+      "rail-accent": { "role": "primary", "displayName": "Signal Coral", "canonical": "#ed7957", "tonalRamp": ["oklch(15% 0.105 40)", "oklch(27% 0.105 40)", "oklch(39% 0.105 40)", "oklch(51% 0.105 40)", "oklch(63% 0.105 40)", "oklch(75% 0.105 40)", "oklch(87% 0.105 40)", "oklch(95% 0.105 40)"] }
+    },
+    "typographyMeta": {
+      "display": { "displayName": "Window Display", "purpose": "Settings-window title only." },
+      "headline": { "displayName": "Reminder Headline", "purpose": "The notification's primary instruction." },
+      "title": { "displayName": "Ledger Title", "purpose": "Schedule periods and compact object labels." },
+      "body": { "displayName": "Interface Body", "purpose": "Operational copy and settings labels." },
+      "label": { "displayName": "Section Label", "purpose": "Uppercase section and action labels." }
+    },
+    "shadows": [
+      { "name": "notification-ambient", "value": "0 18px 38px rgba(37, 31, 24, 0.28), 0 4px 12px rgba(37, 31, 24, 0.16)", "purpose": "Separates the always-on-top notification from the Windows desktop." },
+      { "name": "object-shadow", "value": "drop-shadow(0 10px 12px rgba(0, 0, 0, 0.28))", "purpose": "Gives the authored inhaler a physical presence in the settings rail." },
+      { "name": "control-lift", "value": "0 2px 4px rgba(40, 37, 31, 0.26)", "purpose": "Lifts the switch knob from its track." }
+    ],
+    "motion": [
+      { "name": "state-standard", "value": "160ms ease-out", "purpose": "Switch and quiet state transitions." },
+      { "name": "notification-enter", "value": "240ms cubic-bezier(0.16, 1, 0.3, 1)", "purpose": "Short upward arrival for the reminder." },
+      { "name": "notification-leave", "value": "180ms ease-out", "purpose": "Fast downward dismissal after an action." }
+    ],
+    "breakpoints": [
+      { "name": "compact-settings", "value": "440px" }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Reminder Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "Confirms inhaler use in the notification.",
+      "html": "<button class=\"ds-btn-primary\" type=\"button\">Done</button>",
+      "css": ".ds-btn-primary { min-height: 33px; padding: 0 10px; color: #fff9ef; background: var(--clay-dark, #8f432f); border: 1px solid var(--clay-dark, #8f432f); border-radius: 6px; font: 650 10.5px/1.3 \"Manrope Local\", sans-serif; cursor: pointer; transition: background 130ms ease-out, border-color 130ms ease-out, transform 100ms ease-out; } .ds-btn-primary:hover { background: var(--ink, #28251f); border-color: var(--ink, #28251f); } .ds-btn-primary:focus-visible { outline: 2px solid var(--clay-dark, #8f432f); outline-offset: 2px; } .ds-btn-primary:active { transform: translateY(1px); }"
+    },
+    {
+      "name": "Secondary Reminder Button",
+      "kind": "button",
+      "refersTo": "button-secondary",
+      "description": "Defers the reminder without competing with confirmation.",
+      "html": "<button class=\"ds-btn-secondary\" type=\"button\">Remind later</button>",
+      "css": ".ds-btn-secondary { min-height: 33px; padding: 0 10px; color: var(--ink, #28251f); background: var(--control-surface, #fffdf7); border: 1px solid var(--notification-line, #b8afa2); border-radius: 6px; font: 650 10.5px/1.3 \"Manrope Local\", sans-serif; cursor: pointer; transition: background 130ms ease-out, border-color 130ms ease-out, transform 100ms ease-out; } .ds-btn-secondary:hover { background: #eee8de; border-color: #8f867a; } .ds-btn-secondary:focus-visible { outline: 2px solid var(--clay-dark, #8f432f); outline-offset: 2px; } .ds-btn-secondary:active { transform: translateY(1px); }"
+    },
+    {
+      "name": "Time Field",
+      "kind": "input",
+      "refersTo": "field",
+      "description": "Keeps schedule measurement native, compact, and keyboard accessible.",
+      "html": "<label class=\"ds-field\"><span>From</span><input type=\"time\" value=\"08:00\"></label>",
+      "css": ".ds-field { display: flex; width: 96px; flex-direction: column; gap: 3px; color: var(--muted, #6f685e); font: 500 10px/1.25 \"Manrope Local\", sans-serif; } .ds-field input { width: 100%; height: 32px; padding: 0 5px; color: var(--ink, #28251f); background: var(--control-surface, #fffdf7); border: 1px solid var(--line-strong, #aea598); border-radius: 6px; font: 400 11px/1.3 \"Cascadia Mono\", Consolas, monospace; transition: border-color 140ms ease-out; } .ds-field input:hover { border-color: #8e8578; } .ds-field input:focus-visible { outline: 2px solid var(--clay-dark, #8f432f); outline-offset: 2px; }"
+    },
+    {
+      "name": "Schedule Switch",
+      "kind": "input",
+      "description": "Shows enabled state with both position and clay color.",
+      "html": "<label class=\"ds-switch\"><input type=\"checkbox\" checked><span></span></label>",
+      "css": ".ds-switch { position: relative; display: inline-block; width: 34px; height: 20px; cursor: pointer; } .ds-switch input { position: absolute; width: 1px; height: 1px; opacity: 0; } .ds-switch span { position: absolute; inset: 0; border-radius: 999px; background: #a8a094; transition: background 160ms ease-out; } .ds-switch span::before { content: \"\"; position: absolute; top: 3px; left: 3px; width: 14px; height: 14px; border-radius: 50%; background: var(--paper-high, #fbf8f0); box-shadow: 0 2px 4px rgba(40, 37, 31, 0.26); transition: transform 160ms ease-out; } .ds-switch input:checked + span { background: var(--clay, #c45f42); } .ds-switch input:checked + span::before { transform: translateX(14px); } .ds-switch input:focus-visible + span { outline: 2px solid var(--clay-dark, #8f432f); outline-offset: 2px; }"
+    },
+    {
+      "name": "Dose Chip",
+      "kind": "chip",
+      "description": "Names the reminder window in a terse measurement voice.",
+      "html": "<span class=\"ds-dose-chip\">Morning dose</span>",
+      "css": ".ds-dose-chip { color: var(--clay-dark, #8f432f); font: 700 9px/1.3 \"Cascadia Mono\", Consolas, monospace; letter-spacing: 0.055em; text-transform: uppercase; } .ds-dose-chip[data-period=\"evening\"] { color: var(--sage, #61705c); }"
+    },
+    {
+      "name": "Ruled Schedule Row",
+      "kind": "card",
+      "description": "Groups one reminder window without introducing a card shell.",
+      "html": "<div class=\"ds-schedule-row\"><div><strong>Morning</strong><small>Enabled</small></div><span>08:00 → 10:00</span><b aria-label=\"Enabled\">●</b></div>",
+      "css": ".ds-schedule-row { display: grid; grid-template-columns: minmax(66px, .72fr) minmax(144px, 1.55fr) 34px; align-items: center; gap: 8px; min-height: 58px; padding: 6px 0; color: var(--ink, #28251f); border-block: 1px solid var(--line, #c8c0b4); font-family: \"Manrope Local\", sans-serif; } .ds-schedule-row div { display: flex; flex-direction: column; } .ds-schedule-row strong { font-size: 13px; } .ds-schedule-row small { margin-top: 2px; color: var(--muted, #6f685e); font-size: 10px; } .ds-schedule-row > span { color: var(--ink, #28251f); font: 400 11px/1.3 \"Cascadia Mono\", Consolas, monospace; } .ds-schedule-row b { color: var(--clay, #c45f42); font-size: 18px; text-align: center; }"
+    },
+    {
+      "name": "Notification Container",
+      "kind": "custom",
+      "description": "Joins the charcoal object bay and paper message field into the always-on-top reminder.",
+      "html": "<article class=\"ds-notification\"><div class=\"ds-notification-bay\"><svg viewBox=\"0 0 28 28\" aria-hidden=\"true\"><circle cx=\"14\" cy=\"14\" r=\"3\" fill=\"currentColor\"/><path d=\"M14 2v7M14 19v7M2 14h7M19 14h7M5.5 5.5l5 5M17.5 17.5l5 5M22.5 5.5l-5 5M10.5 17.5l-5 5\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\"/></svg></div><div class=\"ds-notification-copy\"><small>Morning dose</small><strong>Time for your inhaler</strong><p>Your scheduled reminder is ready.</p></div></article>",
+      "css": ".ds-notification { display: grid; width: 360px; min-height: 210px; grid-template-columns: 112px minmax(0, 1fr); overflow: hidden; color: var(--ink, #28251f); background: var(--paper-high, #fbf8f0); border: 1px solid var(--notification-line, #b8afa2); border-radius: 10px; box-shadow: 0 18px 38px rgba(37, 31, 24, .28), 0 4px 12px rgba(37, 31, 24, .16); font-family: \"Manrope Local\", sans-serif; transition: opacity 220ms ease-out, transform 250ms cubic-bezier(.16, 1, .3, 1); } .ds-notification:hover { transform: translateY(-1px); } .ds-notification:focus-within { outline: 2px solid var(--clay-dark, #8f432f); outline-offset: 2px; } .ds-notification-bay { padding: 12px 14px; color: var(--rail-accent, #ed7957); background: var(--ink, #28251f); } .ds-notification-bay svg { width: 23px; height: 23px; } .ds-notification-copy { display: flex; flex-direction: column; padding: 14px 15px; } .ds-notification-copy small { color: var(--clay-dark, #8f432f); font: 700 9px/1.3 \"Cascadia Mono\", Consolas, monospace; letter-spacing: .055em; text-transform: uppercase; } .ds-notification-copy strong { margin-top: 8px; font-size: 17px; line-height: 1.16; letter-spacing: -.015em; } .ds-notification-copy p { margin: 7px 0 0; color: var(--muted, #6f685e); font-size: 10.5px; line-height: 1.4; }"
+    }
+  ],
+  "narrative": {
+    "northStar": "Breath Console",
+    "overview": "Breath Console makes a twice-daily health routine feel like a calm, dependable instrument. Both local Electron surfaces belong to one authored world: a warm paper workspace is anchored by charcoal equipment bays, quiet rules, and a single inhaler object rather than generic healthcare decoration.\n\nThe system is compact, tactile, and operational. It uses clay for intentional action, sage for confirmation, and restrained motion only to clarify state. The settings ledger moves from schedule to notification behavior to preferences and then recedes to the tray; the notification identifies the dose, presents the reminder, and offers confirm or defer without demanding navigation. The redesign preserves the existing element IDs, actions, localization, IPC behavior, and native control semantics.",
+    "keyCharacteristics": [
+      "Warm paper fields anchored by charcoal equipment bays.",
+      "Clay is action, sage is confirmation, and thin rules organize content.",
+      "Manrope drives the interface; monospace is reserved for measurements and small equipment metadata.",
+      "One authored inhaler illustration links settings and notification."
+    ],
+    "rules": [
+      { "name": "The Instrument Signal Rule", "body": "Clay means action, sage means confirmation or quiet state, and neither becomes a decorative wash.", "section": "colors" },
+      { "name": "The Measurement Voice Rule", "body": "Monospace is reserved for time, dose, and machine-like metadata; prose and actions stay in Manrope.", "section": "typography" },
+      { "name": "The Flat Workspace Rule", "body": "Routine settings stay flat and ruled; substantial shadow is reserved for the interruptive notification and the shared physical inhaler object.", "section": "elevation" }
+    ],
+    "dos": [
+      "Do treat settings and notification as one local Windows product with the same paper, equipment bay, typography, and inhaler object.",
+      "Do keep schedule, notification behavior, preferences, and tray behavior in that operational order.",
+      "Do preserve native controls, visible focus, disabled states, reduced-motion behavior, localization fit, and every existing element ID and action.",
+      "Do use thin rules and tonal paper changes to organize routine content."
+    ],
+    "donts": [
+      "Don't introduce teal glassmorphism, purple gradients, translucent panels, or stacked generic healthcare cards.",
+      "Don't turn clay or sage into broad decorative backgrounds; they are operational signals.",
+      "Don't add decorative dashboard modules, cloud/account patterns, or medical efficacy claims.",
+      "Don't substitute stock medical imagery, emoji, or multiple illustrations for the single authored inhaler object."
+    ]
+  }
+}

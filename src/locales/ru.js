@@ -20,6 +20,7 @@ module.exports = {
   'settings.saved': 'Сохранено',
   'settings.minimizeHint': 'При закрытии окно сворачивается в системный трей',
   'settings.quit': 'Выход',
+  'settings.localTray': 'Локально\nWindows\nТрей',
 
   'notif.title': 'Пора использовать ингалятор',
   'notif.morning': 'Утренняя доза',
