@@ -1,0 +1,29 @@
+{
+  "name": "inhaler-reminder",
+  "productName": "Inhaler Reminder",
+  "version": "0.1.0",
+  "description": "Asthma inhaler reminder for Windows",
+  "main": "src/main/main.js",
+  "scripts": {
+    "start": "electron .",
+    "smoke": "electron . --smoke",
+    "pack": "electron-builder --dir",
+    "dist": "electron-builder --win"
+  },
+  "license": "MIT",
+  "devDependencies": {
+    "electron": "^33.0.0",
+    "electron-builder": "^25.1.8"
+  },
+  "build": {
+    "appId": "com.local.inhalerreminder",
+    "productName": "Inhaler Reminder",
+    "directories": { "output": "dist" },
+    "files": ["src/**/*", "assets/**/*", "package.json"],
+    "win": {
+      "target": ["portable"],
+      "icon": "assets/icon.png",
+      "signAndEditExecutable": false
+    }
+  }
+}

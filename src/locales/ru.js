@@ -1,0 +1,34 @@
+module.exports = {
+  'app.name': 'Ингалятор',
+  'app.fullName': 'Напоминание об ингаляторе',
+
+  'settings.title': 'Настройки',
+  'settings.preferences': 'Предпочтения',
+  'settings.schedule': 'Расписание',
+  'settings.morning': 'Утро',
+  'settings.evening': 'Вечер',
+  'settings.from': 'С',
+  'settings.to': 'По',
+  'settings.enabled': 'Включено',
+  'settings.notifications': 'Уведомления',
+  'settings.snooze': 'Напомнить позже через (мин.)',
+  'settings.grace': 'Напомнить при возвращении (мин.)',
+  'settings.graceHint': 'Если вас не было за компьютером в заданный интервал, приложение напомнит в течение этого времени после его окончания. По истечении срока напоминание будет пропущено.',
+  'settings.sound': 'Звук уведомления',
+  'settings.language': 'Язык',
+  'settings.autostart': 'Запускать вместе с Windows',
+  'settings.saved': 'Сохранено',
+  'settings.minimizeHint': 'При закрытии окно сворачивается в системный трей',
+  'settings.quit': 'Выход',
+
+  'notif.title': 'Пора использовать ингалятор',
+  'notif.morning': 'Утренняя доза',
+  'notif.evening': 'Вечерняя доза',
+  'notif.body': 'Пожалуйста, используйте ингалятор согласно назначению врача.',
+  'notif.confirm': 'Готово',
+  'notif.snooze': 'Напомнить позже',
+
+  'tray.open': 'Открыть',
+  'tray.quit': 'Выход',
+  'tray.tooltip': 'Напоминание об ингаляторе'
+};

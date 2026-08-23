@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Settings</title>
+  <link rel="stylesheet" href="settings.css" />
+</head>
+<body>
+  <div class="app">
+
+    <header class="header">
+      <div class="brand">
+        <div class="logo" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none">
+            <path d="M3 12h4l2-5 4 10 2-5h6" stroke="#ffffff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" />
+          </svg>
+        </div>
+        <h1 class="title" data-i18n="settings.title">Settings</h1>
+      </div>
+      <div class="saved" id="savedIndicator" role="status" aria-live="polite">
+        <svg class="saved-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <path d="M20 6 9 17l-5-5" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" />
+        </svg>
+        <span data-i18n="settings.saved">Saved</span>
+      </div>
+    </header>
+
+    <main class="content">
+
+      <section class="card">
+        <h2 class="section-title" data-i18n="settings.schedule">Schedule</h2>
+
+        <div class="schedule-block">
+          <div class="block-header">
+            <span class="block-title">
+              <span class="dot dot-morning" aria-hidden="true"></span>
+              <span data-i18n="settings.morning">Morning</span>
+            </span>
+            <div class="switch-row">
+              <span class="switch-label" data-i18n="settings.enabled">Enabled</span>
+              <label class="switch">
+                <input type="checkbox" id="morningEnabled" />
+                <span class="slider"></span>
+              </label>
+            </div>
+          </div>
+          <div class="time-row">
+            <div class="field">
+              <label for="morningStart" data-i18n="settings.from">From</label>
+              <input type="time" id="morningStart" />
+            </div>
+            <div class="field">
+              <label for="morningEnd" data-i18n="settings.to">To</label>
+              <input type="time" id="morningEnd" />
+            </div>
+          </div>
+        </div>
+
+        <div class="schedule-block">
+          <div class="block-header">
+            <span class="block-title">
+              <span class="dot dot-evening" aria-hidden="true"></span>
+              <span data-i18n="settings.evening">Evening</span>
+            </span>
+            <div class="switch-row">
+              <span class="switch-label" data-i18n="settings.enabled">Enabled</span>
+              <label class="switch">
+                <input type="checkbox" id="eveningEnabled" />
+                <span class="slider"></span>
+              </label>
+            </div>
+          </div>
+          <div class="time-row">
+            <div class="field">
+              <label for="eveningStart" data-i18n="settings.from">From</label>
+              <input type="time" id="eveningStart" />
+            </div>
+            <div class="field">
+              <label for="eveningEnd" data-i18n="settings.to">To</label>
+              <input type="time" id="eveningEnd" />
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="card">
+        <h2 class="section-title" data-i18n="settings.notifications">Notifications</h2>
+
+        <div class="field">
+          <label for="snooze" data-i18n="settings.snooze">Remind later after (min)</label>
+          <input type="number" id="snooze" min="1" max="180" step="1" />
+        </div>
+
+        <div class="field">
+          <label for="grace" data-i18n="settings.grace">Catch-up window (min)</label>
+          <input type="number" id="grace" min="0" max="360" step="1" />
+        </div>
+
+        <div class="hint">
+          <svg class="hint-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="2" />
+            <path d="M12 11v5" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+            <circle cx="12" cy="8" r="1.1" fill="currentColor" />
+          </svg>
+          <p data-i18n="settings.graceHint">If you were away from the computer during the interval, the app will remind you within this time after it ends.</p>
+        </div>
+      </section>
+
+      <section class="card">
+        <h2 class="section-title" id="prefsTitle" data-i18n="settings.preferences">Preferences</h2>
+
+        <div class="pref-row">
+          <span class="pref-label" data-i18n="settings.sound">Notification sound</span>
+          <label class="switch">
+            <input type="checkbox" id="soundEnabled" />
+            <span class="slider"></span>
+          </label>
+        </div>
+
+        <div class="pref-row">
+          <span class="pref-label" data-i18n="settings.language">Language</span>
+          <div class="select-wrap">
+            <select id="language">
+              <option value="ru">Русский</option>
+              <option value="en">English</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="pref-row">
+          <span class="pref-label" data-i18n="settings.autostart">Start with Windows</span>
+          <label class="switch">
+            <input type="checkbox" id="autostart" />
+            <span class="slider"></span>
+          </label>
+        </div>
+      </section>
+
+    </main>
+
+    <footer class="footer">
+      <div class="hint-row">
+        <svg class="hint-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <rect x="4" y="4" width="16" height="16" rx="4" stroke="currentColor" stroke-width="2" />
+          <path d="M8 12h8" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+          <path d="M12 12v4" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+        </svg>
+        <span data-i18n="settings.minimizeHint">Closing hides the window to the system tray</span>
+      </div>
+      <button type="button" class="btn-quit" id="quitBtn" data-i18n="settings.quit">Quit</button>
+    </footer>
+
+  </div>
+
+  <script src="settings.js"></script>
+</body>
+</html>

@@ -1,0 +1,34 @@
+module.exports = {
+  'app.name': 'Inhaler',
+  'app.fullName': 'Inhaler Reminder',
+
+  'settings.title': 'Settings',
+  'settings.preferences': 'Preferences',
+  'settings.schedule': 'Schedule',
+  'settings.morning': 'Morning',
+  'settings.evening': 'Evening',
+  'settings.from': 'From',
+  'settings.to': 'To',
+  'settings.enabled': 'Enabled',
+  'settings.notifications': 'Notifications',
+  'settings.snooze': 'Remind later after (min)',
+  'settings.grace': 'Catch-up window (min)',
+  'settings.graceHint': 'If you were away from the computer during the interval, the app will remind you within this time after it ends. After that, the reminder is skipped.',
+  'settings.sound': 'Notification sound',
+  'settings.language': 'Language',
+  'settings.autostart': 'Start with Windows',
+  'settings.saved': 'Saved',
+  'settings.minimizeHint': 'Closing hides the window to the system tray',
+  'settings.quit': 'Quit',
+
+  'notif.title': 'Time to use your inhaler',
+  'notif.morning': 'Morning dose',
+  'notif.evening': 'Evening dose',
+  'notif.body': 'Please use your inhaler as prescribed.',
+  'notif.confirm': 'Done',
+  'notif.snooze': 'Remind later',
+
+  'tray.open': 'Open',
+  'tray.quit': 'Quit',
+  'tray.tooltip': 'Inhaler Reminder'
+};
