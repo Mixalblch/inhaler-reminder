@@ -1,43 +1,351 @@
-:root { --surface:rgba(255,255,255,.95); --text:#1c1c1e; --muted:#8a8a8e; --line:rgba(60,60,67,.16); --accent:#12a594; --accent-hover:#0e8d7e; --dose:#5b62d6; --ornament:#e8f7f4; }
-html[data-theme="dark"] { --surface:rgba(28,28,30,.96); --text:#f5f5f7; --muted:#98989e; --line:rgba(255,255,255,.16); --accent:#2fd3bc; --accent-hover:#54e2cd; --dose:#a6abff; --ornament:#173b37; }
-@font-face { font-family:"Manrope Local"; src:url("../../../assets/fonts/manrope-latin.woff2") format("woff2"); font-style:normal; font-weight:200 800; font-display:swap; }
-@font-face { font-family:"Manrope Local"; src:url("../../../assets/fonts/manrope-cyrillic.woff2") format("woff2"); font-style:normal; font-weight:200 800; font-display:swap; unicode-range:U+0400-045F,U+0490-0491,U+04B0-04B1,U+2116; }
-* { box-sizing:border-box; }
-html,body { width:100%; height:100%; margin:0; overflow:hidden; color:var(--text); background:transparent; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI Variable Text","Manrope Local",sans-serif; -webkit-font-smoothing:antialiased; user-select:none; }
-button { font:inherit; color:inherit; }
-button:focus-visible { outline:2px solid var(--accent); outline-offset:2px; }
-.notification-card { position:absolute; inset:0; overflow:hidden; background:var(--surface); border:1px solid rgba(255,255,255,.62); border-radius:20px; box-shadow:0 30px 70px -24px rgba(28,28,30,.42),0 2px 6px rgba(28,28,30,.1); opacity:1; transform:none; transform-origin:bottom right; transition:opacity 200ms ease,transform 220ms cubic-bezier(.32,.72,0,1); }
-html[data-theme="dark"] .notification-card { border-color:rgba(255,255,255,.14); }
-.notification-card.is-visible { animation:notification-in 240ms cubic-bezier(.32,.72,0,1); }
-.notification-card.is-leaving { opacity:0; transform:translateY(8px) scale(.985); }
-.breath-mark { position:absolute; right:-34px; bottom:-46px; width:250px; height:250px; color:var(--ornament); pointer-events:none; }
-.idle-view { position:relative; z-index:1; display:flex; flex-direction:column; height:100%; }
-.notification-copy { padding:20px 22px 0; animation:soft-in 240ms ease; }
-.dose-meta { display:flex; align-items:center; gap:7px; min-width:0; }
-.dose-dot { width:7px; height:7px; flex:none; border-radius:50%; background:var(--dose); }
-#notif-chip { color:var(--dose); font-size:11px; font-weight:750; letter-spacing:.08em; text-transform:uppercase; }
-.dose-window { color:#b0b0b3; font-size:11px; font-variant-numeric:tabular-nums; }
-#notif-title { max-width:330px; margin:11px 0 0; font-size:21px; font-weight:620; line-height:1.18; letter-spacing:-.03em; }
-#notif-body { max-width:290px; margin:7px 0 0; color:var(--muted); font-size:13px; line-height:1.4; }
-.actions { display:flex; gap:9px; margin-top:auto; padding:16px 20px 18px; }
-.btn { height:42px; border-radius:12px; font-size:14px; cursor:pointer; transition:background 160ms ease,transform 100ms ease; }
-.btn:active { transform:scale(.985); }
-.primary { flex:1; border:0; color:#fff; background:var(--accent); font-weight:650; }
-.primary:hover { background:var(--accent-hover); }
-.secondary { width:132px; border:1px solid var(--line); background:color-mix(in srgb,var(--surface) 76%,transparent); font-weight:520; }
-.secondary:hover { background:color-mix(in srgb,var(--surface) 88%,var(--text) 6%); }
-.snooze-sheet { position:absolute; z-index:3; right:20px; bottom:66px; display:flex; gap:7px; width:238px; padding:7px; border:1px solid var(--line); border-radius:13px; background:var(--surface); box-shadow:0 12px 30px rgba(28,28,30,.16); animation:soft-in 180ms ease; }
-.snooze-sheet[hidden] { display:none; }
-.snooze-sheet button { flex:1; height:34px; padding:0 5px; border:1px solid var(--line); border-radius:9px; background:transparent; font-size:12px; cursor:pointer; }
-.snooze-sheet button:hover { background:rgba(127,127,127,.1); }
-.result-view { position:relative; z-index:2; display:flex; flex-direction:column; align-items:center; justify-content:center; height:100%; gap:8px; animation:soft-in 260ms ease; }
-.result-view[hidden] { display:none; }
-.undo { position:absolute; top:14px; right:16px; border:0; color:var(--muted); background:transparent; font-size:12px; cursor:pointer; }
-.undo:hover { color:var(--text); }
-.result-icon { display:flex; align-items:center; justify-content:center; width:56px; height:56px; border-radius:50%; color:#fff; background:var(--accent); font-size:30px; font-weight:700; animation:ring-in 380ms cubic-bezier(.32,.72,0,1); }
-.result-title { font-size:17px; font-weight:620; letter-spacing:-.02em; }
-.result-subtitle { color:var(--muted); font-size:12.5px; }
-@keyframes notification-in { from { opacity:.72; transform:translateY(8px) scale(.985); } }
-@keyframes soft-in { from { opacity:0; transform:translateY(4px); } }
-@keyframes ring-in { from { opacity:0; transform:scale(.72); } }
-@media (prefers-reduced-motion:reduce) { *,*::before,*::after { animation-duration:.01ms!important; transition-duration:.01ms!important; } }
+/* Inhaler Reminder — always-on-top reminder.
+   Claude Design direction 2a "Дыхание", 400 × 236. */
+
+:root {
+  --surface: rgba(255, 255, 255, .94);
+  --surface-edge: rgba(255, 255, 255, .6);
+  --text: #1c1c1e;
+  --secondary: #8a8a8e;
+  --faint: #b0b0b3;
+
+  --accent: #12a594;
+  --accent-hover: #0e8d7e;
+  --accent-text: #ffffff;
+
+  --dose: #5b62d6;
+  --snoozed: #e9a23b;
+  --snoozed-text: #b57a1e;
+
+  --ornament: rgba(18, 165, 148, .10);
+
+  --line: rgba(60, 60, 67, .16);
+  --line-strong: rgba(60, 60, 67, .18);
+  --sheet-button: #ffffff;
+  --sheet-button-hover: #f7f7f5;
+  --secondary-bg: rgba(255, 255, 255, .7);
+  --secondary-hover: #f2f2f0;
+
+  --spring: cubic-bezier(.32, .72, 0, 1);
+}
+
+html[data-theme="dark"] {
+  --surface: rgba(28, 28, 30, .9);
+  --surface-edge: rgba(255, 255, 255, .14);
+  --text: #f5f5f7;
+  --secondary: #98989e;
+  --faint: #8e8e93;
+
+  --accent: #2fd3bc;
+  --accent-hover: #54e2cd;
+  --accent-text: #07211e;
+
+  --dose: #8b90ec;
+  --snoozed: #f0b054;
+  --snoozed-text: #f0b054;
+
+  --ornament: rgba(47, 211, 188, .13);
+
+  --line: rgba(255, 255, 255, .16);
+  --line-strong: rgba(255, 255, 255, .18);
+  --sheet-button: #2c2c2e;
+  --sheet-button-hover: #3a3a3c;
+  --secondary-bg: rgba(255, 255, 255, .06);
+  --secondary-hover: #2c2c2e;
+}
+
+@font-face {
+  font-family: "Manrope Local";
+  src: url("../../../assets/fonts/manrope-latin.woff2") format("woff2");
+  font-style: normal;
+  font-weight: 200 800;
+  font-display: swap;
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+@font-face {
+  font-family: "Manrope Local";
+  src: url("../../../assets/fonts/manrope-cyrillic.woff2") format("woff2");
+  font-style: normal;
+  font-weight: 200 800;
+  font-display: swap;
+  unicode-range: U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116;
+}
+
+* { box-sizing: border-box; }
+
+html,
+body {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  overflow: hidden;
+  color: var(--text);
+  background: transparent;
+  font-family: -apple-system, "SF Pro Text", "Segoe UI Variable Text", "Manrope Local", sans-serif;
+  -webkit-font-smoothing: antialiased;
+  user-select: none;
+}
+
+button { font: inherit; color: inherit; }
+
+button:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.card {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  border: 1px solid var(--surface-edge);
+  border-radius: 20px;
+  background: var(--surface);
+  backdrop-filter: blur(30px);
+  box-shadow: 0 30px 70px -24px rgba(28, 28, 30, .42), 0 2px 6px rgba(28, 28, 30, .1);
+  transition: opacity 200ms ease, transform 220ms var(--spring);
+  transform-origin: bottom right;
+}
+
+.card.is-visible { animation: card-in 240ms var(--spring); }
+
+.card.is-leaving {
+  opacity: 0;
+  transform: translateY(8px) scale(.985);
+}
+
+.breath-mark {
+  position: absolute;
+  right: -34px;
+  bottom: -46px;
+  width: 250px;
+  height: 250px;
+  color: var(--ornament);
+  pointer-events: none;
+}
+
+/* ---------- idle ---------- */
+
+.idle-view {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.idle-view[hidden] { display: none; }
+
+.copy {
+  padding: 20px 22px 0;
+  animation: soft-in 300ms var(--spring);
+}
+
+.dose-meta {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.dose-dot {
+  width: 7px;
+  height: 7px;
+  flex: none;
+  border-radius: 999px;
+  background: var(--dose);
+}
+
+.chip {
+  color: var(--dose);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+
+.dose-window {
+  color: var(--faint);
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+}
+
+/* The snoozed state recolours the same meta row rather than swapping views. */
+.idle-view.snoozed .dose-dot { background: var(--snoozed); }
+.idle-view.snoozed .chip { color: var(--snoozed-text); }
+
+#notifTitle {
+  max-width: 330px;
+  margin: 11px 0 0;
+  font-size: 21px;
+  font-weight: 600;
+  line-height: 1.18;
+  letter-spacing: -.03em;
+  text-wrap: pretty;
+}
+
+#notifBody {
+  max-width: 290px;
+  margin: 7px 0 0;
+  color: var(--secondary);
+  font-size: 13px;
+  line-height: 1.4;
+  text-wrap: pretty;
+}
+
+/* ---------- actions ---------- */
+
+.actions {
+  margin-top: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  padding: 16px 20px;
+}
+
+/* Choices expand in the flow above the buttons — nothing floats over the card. */
+.snooze-sheet {
+  display: flex;
+  gap: 7px;
+  animation: soft-in 240ms var(--spring);
+}
+
+.snooze-sheet[hidden] { display: none; }
+
+.snooze-sheet button {
+  flex: 1;
+  height: 36px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--sheet-button);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 160ms ease;
+}
+
+.snooze-sheet button:hover { background: var(--sheet-button-hover); }
+
+.action-row {
+  display: flex;
+  gap: 9px;
+}
+
+.btn {
+  height: 42px;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: background 200ms ease, transform 160ms ease;
+}
+
+.btn:active { transform: scale(.985); }
+
+.primary {
+  flex: 1;
+  border: 0;
+  background: var(--accent);
+  color: var(--accent-text);
+  font-size: 14.5px;
+  font-weight: 600;
+  letter-spacing: -.01em;
+}
+
+.primary:hover { background: var(--accent-hover); }
+
+.secondary {
+  width: 132px;
+  border: 1px solid var(--line-strong);
+  background: var(--secondary-bg);
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.secondary:hover { background: var(--secondary-hover); }
+
+/* ---------- result ---------- */
+
+.result-view {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 13px;
+  height: 100%;
+  animation: soft-in 300ms var(--spring);
+}
+
+.result-view[hidden] { display: none; }
+
+.result-ring {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 56px;
+  height: 56px;
+  border-radius: 999px;
+  background: var(--accent);
+  animation: ring-in 380ms var(--spring);
+}
+
+.result-ring svg { width: 30px; height: 30px; }
+
+/* The tick draws itself in, matching the source's confirmation moment. */
+.result-ring path {
+  stroke-dasharray: 30;
+  animation: draw-check 420ms 100ms var(--spring) both;
+}
+
+.result-title {
+  font-size: 17px;
+  font-weight: 600;
+  letter-spacing: -.02em;
+}
+
+.result-subtitle {
+  margin-top: -9px;
+  color: var(--secondary);
+  font-size: 12.5px;
+}
+
+.undo {
+  position: absolute;
+  top: 14px;
+  right: 16px;
+  padding: 2px;
+  border: 0;
+  background: none;
+  color: var(--faint);
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.undo:hover { color: var(--text); }
+.undo[hidden] { display: none; }
+
+/* ---------- motion ---------- */
+
+@keyframes card-in {
+  from { opacity: .72; transform: translateY(8px) scale(.985); }
+}
+
+@keyframes soft-in {
+  from { opacity: 0; transform: translateY(6px); }
+}
+
+@keyframes ring-in {
+  from { opacity: 0; transform: scale(.86); }
+}
+
+@keyframes draw-check {
+  from { stroke-dashoffset: 30; }
+  to { stroke-dashoffset: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: .01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: .01ms !important;
+  }
+  .result-ring path { stroke-dashoffset: 0; }
+}

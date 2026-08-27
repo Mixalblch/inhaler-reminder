@@ -8,38 +8,50 @@
   <link rel="stylesheet" href="notification.css" />
 </head>
 <body>
-  <div id="card" class="notification-card" role="alert" aria-live="polite">
+  <div class="card" id="card" role="alert" aria-live="polite">
     <svg class="breath-mark" viewBox="0 0 200 200" aria-hidden="true">
-      <circle cx="58" cy="100" r="11" fill="currentColor"></circle>
-      <path d="M84 62a46 46 0 0 1 0 76" stroke="currentColor" stroke-width="9" fill="none" stroke-linecap="round"></path>
-      <path d="M108 44a68 68 0 0 1 0 112" stroke="currentColor" stroke-width="8" fill="none" stroke-linecap="round" opacity=".7"></path>
-      <path d="M132 26a90 90 0 0 1 0 148" stroke="currentColor" stroke-width="7" fill="none" stroke-linecap="round" opacity=".45"></path>
+      <circle cx="58" cy="100" r="11" fill="currentColor" />
+      <path d="M84 62a46 46 0 0 1 0 76" stroke="currentColor" stroke-width="9" fill="none" stroke-linecap="round" />
+      <path d="M108 44a68 68 0 0 1 0 112" stroke="currentColor" stroke-width="8" fill="none" stroke-linecap="round" opacity=".7" />
+      <path d="M132 26a90 90 0 0 1 0 148" stroke="currentColor" stroke-width="7" fill="none" stroke-linecap="round" opacity=".45" />
     </svg>
 
     <div class="idle-view" id="idleView">
-      <div class="notification-copy">
-        <div class="dose-meta"><span class="dose-dot" id="doseDot"></span><span id="notif-chip"></span><span class="dose-window" id="notif-window"></span></div>
-        <h1 id="notif-title"></h1>
-        <p id="notif-body"></p>
+      <div class="copy">
+        <div class="dose-meta">
+          <span class="dose-dot" id="doseDot"></span>
+          <span class="chip" id="doseChip"></span>
+          <span class="dose-window" id="doseWindow"></span>
+        </div>
+        <h1 id="notifTitle"></h1>
+        <p id="notifBody"></p>
       </div>
-      <div class="snooze-sheet" id="snoozeSheet" hidden>
-        <button type="button" data-snooze="15">15 мин</button>
-        <button type="button" data-snooze="30">30 мин</button>
-        <button type="button" data-snooze="60">1 час</button>
-      </div>
+
       <div class="actions">
-        <button id="confirm" type="button" class="btn primary"></button>
-        <button id="snooze" type="button" class="btn secondary"></button>
+        <div class="snooze-sheet" id="snoozeSheet" hidden>
+          <button type="button" data-snooze="15"></button>
+          <button type="button" data-snooze="30"></button>
+          <button type="button" data-snooze="60"></button>
+        </div>
+        <div class="action-row">
+          <button type="button" class="btn primary" id="confirmBtn"></button>
+          <button type="button" class="btn secondary" id="snoozeBtn" aria-expanded="false" aria-controls="snoozeSheet"></button>
+        </div>
       </div>
     </div>
 
     <div class="result-view" id="resultView" hidden>
-      <button id="undo" type="button" class="undo"></button>
-      <div class="result-icon" aria-hidden="true">✓</div>
+      <button type="button" class="undo" id="undoBtn"></button>
+      <div class="result-ring" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none">
+          <path d="M20 6 9 17l-5-5" stroke="#fff" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" />
+        </svg>
+      </div>
       <div class="result-title" id="resultTitle"></div>
       <div class="result-subtitle" id="resultSubtitle"></div>
     </div>
   </div>
+
   <script src="notification.js"></script>
 </body>
 </html>

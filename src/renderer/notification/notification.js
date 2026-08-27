@@ -1,69 +1,201 @@
+// Inhaler Reminder — always-on-top reminder window.
+// Vanilla JS only. Talks to the main process exclusively through window.api.
+
 (function () {
   'use strict';
+
+  var AUTO_SNOOZE_MS = 5 * 60 * 1000;   // untouched reminders defer themselves
+  var RESULT_MS = 4500;                 // how long the confirmation stays up
+  var LEAVE_MS = 200;
+
   var STR = {};
   var payload = null;
+  var confirmedDose = null;
   var autoTimer = null;
   var hideTimer = null;
-  var confirmedDose = null;
+  var leaveTimer = null;
+
   var card = document.getElementById('card');
   var idleView = document.getElementById('idleView');
   var resultView = document.getElementById('resultView');
   var sheet = document.getElementById('snoozeSheet');
-  var confirmBtn = document.getElementById('confirm');
-  var snoozeBtn = document.getElementById('snooze');
+  var snoozeBtn = document.getElementById('snoozeBtn');
 
   function t(key) { return STR[key] || key; }
-  function text(id, value) { var node = document.getElementById(id); if (node) node.textContent = value; }
-  function clearTimers() { clearTimeout(autoTimer); clearTimeout(hideTimer); }
+  function text(id, value) { document.getElementById(id).textContent = value; }
+  function fill(template, values) {
+    return String(template).replace(/\{(\w+)\}/g, function (match, name) {
+      return Object.prototype.hasOwnProperty.call(values, name) ? values[name] : match;
+    });
+  }
+
+  function clearTimers() {
+    clearTimeout(autoTimer);
+    clearTimeout(hideTimer);
+    clearTimeout(leaveTimer);
+  }
+
+  function formatDuration(minutes) {
+    var value = Math.max(0, Number(minutes) || 0);
+    if (value >= 60 && value % 60 === 0) {
+      var hours = value / 60;
+      return hours === 1 && STR['units.oneHour'] ? t('units.oneHour') : hours + ' ' + t('units.hours');
+    }
+    if (value >= 60) {
+      return Math.floor(value / 60) + ' ' + t('units.hours') + ' ' + (value % 60) + ' ' + t('units.minutes');
+    }
+    return value + ' ' + t('units.minutes');
+  }
+
   function applyTheme(appearance) {
-    var dark = appearance === 'dark' || (appearance === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
+    var dark = appearance === 'dark' ||
+      (appearance === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
     document.documentElement.dataset.theme = dark ? 'dark' : 'light';
   }
-  function showIdle() { idleView.hidden = false; resultView.hidden = true; sheet.hidden = true; }
-  function showResult(title, subtitle, undoVisible) {
-    idleView.hidden = true; resultView.hidden = false; text('resultTitle', title); text('resultSubtitle', subtitle);
-    document.getElementById('undo').hidden = !undoVisible;
+
+  function closeSheet() {
+    sheet.hidden = true;
+    snoozeBtn.setAttribute('aria-expanded', 'false');
   }
+
+  function showIdle() {
+    idleView.hidden = false;
+    idleView.classList.remove('snoozed');
+    resultView.hidden = true;
+    closeSheet();
+  }
+
+  function showResult(title, subtitle, undoVisible) {
+    idleView.hidden = true;
+    resultView.hidden = false;
+    text('resultTitle', title);
+    text('resultSubtitle', subtitle);
+    document.getElementById('undoBtn').hidden = !undoVisible;
+  }
+
   function hideSoon(delay) {
     clearTimeout(hideTimer);
-    hideTimer = setTimeout(function () { card.classList.add('is-leaving'); setTimeout(function () { window.api.hideNotification(); }, 180); }, delay);
+    hideTimer = setTimeout(function () {
+      card.classList.add('is-leaving');
+      leaveTimer = setTimeout(function () { window.api.hideNotification(); }, LEAVE_MS);
+    }, delay);
   }
+
   function playChime() {
     try {
-      var AudioContext = window.AudioContext || window.webkitAudioContext; if (!AudioContext) return;
-      var context = new AudioContext(); var now = context.currentTime;
-      [[659.25,0,.16,.12],[880,.15,.26,.1]].forEach(function (item) { var osc=context.createOscillator(); var gain=context.createGain(); osc.frequency.value=item[0]; gain.gain.setValueAtTime(.0001,now+item[1]); gain.gain.exponentialRampToValueAtTime(item[3],now+item[1]+.02); gain.gain.exponentialRampToValueAtTime(.0001,now+item[1]+item[2]); osc.connect(gain); gain.connect(context.destination); osc.start(now+item[1]); osc.stop(now+item[1]+item[2]+.05); });
-      setTimeout(function () { context.close(); }, 900);
+      var Ctx = window.AudioContext || window.webkitAudioContext;
+      if (!Ctx) return;
+      var context = new Ctx();
+      var now = context.currentTime;
+      [[659.25, 0, .16, .12], [880, .15, .26, .1]].forEach(function (item) {
+        var osc = context.createOscillator();
+        var gain = context.createGain();
+        osc.type = 'sine';
+        osc.frequency.value = item[0];
+        gain.gain.setValueAtTime(.0001, now + item[1]);
+        gain.gain.exponentialRampToValueAtTime(item[3], now + item[1] + .02);
+        gain.gain.exponentialRampToValueAtTime(.0001, now + item[1] + item[2]);
+        osc.connect(gain);
+        gain.connect(context.destination);
+        osc.start(now + item[1]);
+        osc.stop(now + item[1] + item[2] + .05);
+      });
+      setTimeout(function () { try { context.close(); } catch (e) { /* already closed */ } }, 900);
     } catch (error) { /* sound is optional */ }
   }
-  function render(nextPayload) {
-    payload = nextPayload; STR = payload.strings || {}; confirmedDose = null; document.documentElement.lang = payload.locale === 'en' ? 'en' : 'ru'; applyTheme(payload.appearance || 'system'); showIdle();
+
+  function render(next) {
+    payload = next;
+    STR = payload.strings || {};
+    confirmedDose = null;
+    document.documentElement.lang = payload.locale === 'en' ? 'en' : 'ru';
+    applyTheme(payload.appearance || 'system');
+    showIdle();
+
     var morning = payload.windowKey === 'morning';
-    text('notif-chip', morning ? t('notif.morning') : t('notif.evening'));
-    text('notif-window', payload.start + ' — ' + payload.end);
-    text('notif-title', t('notif.title')); text('notif-body', t('notif.body'));
-    text('confirm', t('notif.confirm')); text('snooze', t('notif.snooze')); text('undo', t('history.undo'));
-    document.getElementById('doseDot').classList.toggle('morning', morning);
+    text('doseChip', morning ? t('notif.morning') : t('notif.evening'));
+    text('doseWindow', payload.start + ' — ' + payload.end);
+    text('notifTitle', t('notif.title'));
+    text('notifBody', t('notif.body'));
+    text('confirmBtn', t('notif.confirm'));
+    text('snoozeBtn', t('notif.snooze'));
+    text('undoBtn', t('history.undo'));
+
+    sheet.querySelectorAll('[data-snooze]').forEach(function (button) {
+      button.textContent = formatDuration(Number(button.dataset.snooze));
+    });
   }
-  function onNotification(nextPayload) {
-    if (!nextPayload) return; clearTimers(); card.classList.remove('is-leaving','is-visible'); void card.offsetWidth; card.classList.add('is-visible'); render(nextPayload);
+
+  function onNotification(next) {
+    if (!next) return;
+    clearTimers();
+    card.classList.remove('is-leaving', 'is-visible');
+    void card.offsetWidth;              // restart the entry animation
+    card.classList.add('is-visible');
+    render(next);
     if (payload.soundEnabled) playChime();
-    autoTimer = setTimeout(function () { window.api.snooze(payload.snoozeMinutes); hideSoon(0); }, 5 * 60 * 1000);
+
+    autoTimer = setTimeout(function () {
+      window.api.snooze(payload.snoozeMinutes);
+      hideSoon(0);
+    }, AUTO_SNOOZE_MS);
   }
-  confirmBtn.addEventListener('click', function () {
-    clearTimers(); window.api.confirmInhalation().then(function (dose) {
+
+  function nextReminderText() {
+    var next = payload && payload.nextReminder;
+    if (!next) return t('notif.noNext');
+    return fill(t(next.day === 'today' ? 'notif.nextToday' : 'notif.nextTomorrow'), { time: next.time });
+  }
+
+  document.getElementById('confirmBtn').addEventListener('click', function () {
+    clearTimers();
+    window.api.confirmInhalation().then(function (dose) {
       confirmedDose = dose || payload.windowKey;
-      var time = new Date().toLocaleTimeString(document.documentElement.lang || 'ru', { hour:'2-digit', minute:'2-digit' });
-      showResult(t('notif.doneAt').replace('{time}', time), t('notif.nextTomorrow').replace('{time}', payload.windowKey === 'morning' ? payload.end : '09:00'), true);
-      hideSoon(4500);
+      var now = new Date().toLocaleTimeString(document.documentElement.lang, { hour: '2-digit', minute: '2-digit' });
+      showResult(fill(t('notif.doneAt'), { time: now }), nextReminderText(), true);
+      hideSoon(RESULT_MS);
     });
   });
-  snoozeBtn.addEventListener('click', function () { sheet.hidden = !sheet.hidden; });
+
+  snoozeBtn.addEventListener('click', function () {
+    var open = sheet.hidden;
+    sheet.hidden = !open;
+    snoozeBtn.setAttribute('aria-expanded', String(open));
+  });
+
   sheet.querySelectorAll('[data-snooze]').forEach(function (button) {
-    button.addEventListener('click', function () { var minutes=Number(button.dataset.snooze); clearTimers(); window.api.snooze(minutes); showResult(t('notif.snoozedFor').replace('{minutes}', minutes), t('notif.windowWillClose'), false); hideSoon(900); });
+    button.addEventListener('click', function () {
+      clearTimers();
+      var requested = Number(button.dataset.snooze);
+      window.api.snooze(requested).then(function (granted) {
+        // The main process may shorten a snooze so it cannot outlive the
+        // catch-up deadline — report what was actually granted.
+        var minutes = Number(granted) > 0 ? Number(granted) : requested;
+        showResult(
+          fill(t('notif.snoozedFor'), { duration: formatDuration(minutes) }),
+          t('notif.windowWillClose'),
+          false
+        );
+        hideSoon(1600);
+      });
+    });
   });
-  document.getElementById('undo').addEventListener('click', function () {
-    clearTimers(); window.api.undoInhalation(confirmedDose).then(function (ok) { if (ok) { confirmedDose=null; showIdle(); } });
+
+  document.getElementById('undoBtn').addEventListener('click', function () {
+    clearTimers();
+    window.api.undoInhalation(confirmedDose).then(function (ok) {
+      if (!ok) { hideSoon(0); return; }
+      confirmedDose = null;
+      showIdle();
+      // Undo puts the reminder back in play, so the auto-defer clock restarts.
+      autoTimer = setTimeout(function () {
+        window.api.snooze(payload.snoozeMinutes);
+        hideSoon(0);
+      }, AUTO_SNOOZE_MS);
+    });
   });
-  if (window.api && typeof window.api.onNotification === 'function') window.api.onNotification(onNotification);
+
+  if (window.api && typeof window.api.onNotification === 'function') {
+    window.api.onNotification(onNotification);
+  }
 })();

@@ -1,20 +1,23 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 256 256" role="img" aria-label="Inhaler Reminder icon">
+<!-- App icon, Claude Design direction 2a, variant A "Тиловая".
+     Proportions follow the previous icon (cap bar, tall body, short narrow
+     mouthpiece with clear space, two exhale dots); the coral mouthpiece comes
+     from the in-app inhaler illustration. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" width="120" height="120">
   <defs>
-    <linearGradient id="background" x1="128" y1="0" x2="128" y2="256" gradientUnits="userSpaceOnUse">
-      <stop stop-color="#17B7A4"/>
-      <stop offset="1" stop-color="#0D8578"/>
+    <linearGradient id="tile" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#17b7a4"/>
+      <stop offset="1" stop-color="#0d8578"/>
     </linearGradient>
-    <filter id="shadow" x="-100" y="-100" width="400" height="400" filterUnits="userSpaceOnUse">
-      <feDropShadow dx="0" dy="9" stdDeviation="8" flood-color="#075E57" flood-opacity=".32"/>
-    </filter>
   </defs>
-  <rect x="1" y="1" width="254" height="254" rx="58" fill="url(#background)" stroke="#0B746A" stroke-width="2"/>
-  <g filter="url(#shadow)" transform="translate(17 9) scale(2.22) rotate(-6 58 42)">
-    <rect x="34" y="5" width="30" height="12" rx="4" fill="#C9CED1"/>
-    <rect x="30" y="21" width="38" height="47" rx="10" fill="#F8F4EC"/>
-    <rect x="69" y="46" width="17" height="18" rx="5" fill="#EE7A56"/>
-    <rect x="37" y="30" width="24" height="28" rx="7" fill="none" stroke="#B3AC9E" stroke-width="2.6" opacity=".4"/>
+  <rect x="0" y="0" width="120" height="120" rx="27" fill="url(#tile)"/>
+  <g transform="translate(-1.2 12) scale(1.02)">
+    <g transform="rotate(-6 58 42)">
+      <rect x="34" y="5" width="30" height="12" rx="4" fill="#c9ced1"/>
+      <rect x="30" y="21" width="38" height="47" rx="10" fill="#f8f4ec"/>
+      <rect x="69" y="46" width="17" height="18" rx="5" fill="#ee7a56"/>
+      <rect x="37" y="30" width="24" height="28" rx="7" fill="none" stroke="#b3ac9e" stroke-width="2.6" opacity=".4"/>
+    </g>
+    <circle cx="92" cy="49" r="3.8" fill="#ffffff"/>
+    <circle cx="98" cy="58" r="2.4" fill="#ffffff" opacity=".7"/>
   </g>
-  <circle cx="220" cy="123" r="9" fill="#fff"/>
-  <circle cx="234" cy="144" r="6" fill="#fff" opacity=".7"/>
 </svg>
