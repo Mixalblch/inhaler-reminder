@@ -28,27 +28,30 @@ for (const id of ['card', 'notif-title', 'notif-chip', 'notif-body', 'confirm', 
   assert.strictEqual(matches.length, 1, `notification must preserve exactly one #${id}`);
 }
 
-assert.match(settingsHtml, /THESIS: Breath Console/);
-assert.match(notificationHtml, /THESIS: Breath Console/);
-assert.match(settingsHtml, /class="app-rail"/);
-assert.match(notificationHtml, /class="notification-art"/);
-assert.match(settingsHtml, /assets\/inhaler-illustration\.png/);
-assert.match(notificationHtml, /assets\/inhaler-illustration\.png/);
+assert.match(settingsHtml, /class="today-section"/);
+assert.match(settingsHtml, /id="morningHistory"/);
+assert.match(settingsHtml, /id="eveningHistory"/);
+assert.match(settingsHtml, /id="backdateBtn"/);
+assert.match(settingsHtml, /data-appearance="system"/);
+assert.match(settingsHtml, /data-appearance="light"/);
+assert.match(settingsHtml, /data-appearance="dark"/);
+assert.match(notificationHtml, /class="breath-mark"/);
+assert.match(notificationHtml, /id="snoozeSheet"/);
+assert.match(notificationHtml, /id="undo"/);
 assert.match(settingsHtml, /aria-labelledby="morningLabel"/);
 assert.match(settingsHtml, /aria-labelledby="eveningLabel"/);
 assert.match(settingsHtml, /aria-labelledby="soundLabel"/);
 assert.match(settingsHtml, /for="language"/);
 assert.match(settingsHtml, /aria-labelledby="autostartLabel"/);
 assert.match(settingsHtml, /data-i18n="app\.name"/);
-assert.match(settingsHtml, /data-i18n="settings\.localTray"/);
-assert.match(settingsHtml, /aria-labelledby="railName"/);
-assert.ok(en['settings.localTray'] && ru['settings.localTray'], 'rail metadata must be localized');
+assert.ok(en['history.title'] && ru['history.title'], 'history must be localized');
+assert.ok(en['settings.appearance'] && ru['settings.appearance'], 'appearance must be localized');
 assert.ok(fs.existsSync(path.join(root, 'assets', 'inhaler-illustration.png')), 'shipping inhaler asset must exist');
 assert.ok(fs.existsSync(path.join(root, 'assets', 'fonts', 'manrope-latin.woff2')), 'local Latin display font must exist');
 assert.ok(fs.existsSync(path.join(root, 'assets', 'fonts', 'manrope-cyrillic.woff2')), 'local Cyrillic display font must exist');
 
 for (const [name, css] of [['settings', settingsCss], ['notification', notificationCss]]) {
-  assert.doesNotMatch(css, /backdrop-filter|radial-gradient|linear-gradient/, `${name} CSS must remove glass and decorative gradients`);
+  assert.doesNotMatch(css, /backdrop-filter/, `${name} CSS must avoid unsupported blur effects`);
   assert.match(css, /:focus-visible/, `${name} CSS must preserve keyboard focus`);
   assert.match(css, /prefers-reduced-motion/, `${name} CSS must honor reduced motion`);
 }

@@ -27,12 +27,19 @@ function createTray(options) {
   const tray = new Tray(img);
   const refresh = function () {
     const s = options.getStrings();
+    const status = options.getStatus ? options.getStatus() : null;
+    const template = [];
+    if (status) {
+      template.push({ label: s['tray.nextDose'] || 'Next dose', enabled: false });
+      template.push({ label: status, enabled: false });
+      template.push({ type: 'separator' });
+      template.push({ label: s['tray.markNow'] || 'Mark dose now', click: options.onMarkNow });
+    }
+    template.push({ label: s['tray.settings'] || s['tray.open'], click: options.onOpen });
+    template.push({ type: 'separator' });
+    template.push({ label: s['tray.quit'], click: options.onQuit });
     tray.setToolTip(s['tray.tooltip'] || 'Inhaler Reminder');
-    tray.setContextMenu(Menu.buildFromTemplate([
-      { label: s['tray.open'], click: options.onOpen },
-      { type: 'separator' },
-      { label: s['tray.quit'], click: options.onQuit }
-    ]));
+    tray.setContextMenu(Menu.buildFromTemplate(template));
   };
   tray.on('double-click', options.onOpen);
   refresh();

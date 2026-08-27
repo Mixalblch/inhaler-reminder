@@ -27,6 +27,8 @@ The application runs in the Windows system tray. The user configures morning and
 - Preserve all current functionality and data behavior during the redesign.
 - Support Russian and English.
 - Keep morning and evening schedules, snooze timing, catch-up timing, notification sound, autostart, saved-state feedback, tray behavior, confirmation, and snooze actions.
+- Keep a local per-day dose history, show the most recent 14 days, and allow a missed dose to be marked retroactively with Undo.
+- Support System, Light, and Dark appearance modes without changing scheduling behavior.
 - Remain a compact Electron application with no new runtime dependency required for the visual redesign.
 - Continue operating locally; do not introduce accounts, cloud services, analytics, or medical claims.
 
