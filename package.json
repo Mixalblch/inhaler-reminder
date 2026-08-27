@@ -16,7 +16,8 @@
     "render-icon": "electron scripts/render-icon.js",
     "capture": "electron . --capture-dir=qa",
     "pack": "electron-builder --dir",
-    "dist": "electron-builder --win"
+    "dist": "electron-builder --win",
+    "screenshots": "electron scripts/screenshots.js"
   },
   "license": "MIT",
   "devDependencies": {
