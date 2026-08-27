@@ -61,13 +61,17 @@ jobs:
         env:
           HEAD_MESSAGE: ${{ github.event.head_commit.message }}
         run: |
+          # Only the subject line is inspected. Matching the whole message means
+          # a body that merely explains the marker suppresses the release.
+          subject=$(printf '%s' "$HEAD_MESSAGE" | head -n 1)
           if [ "${{ github.event_name }}" = "push" ] \
             && [ "${{ github.ref }}" = "refs/heads/main" ] \
-            && [[ "$HEAD_MESSAGE" != *"[no release]"* ]]; then
+            && [[ "$subject" != *"[no release]"* ]]; then
             echo "release=true" >> "$GITHUB_OUTPUT"
           else
             echo "release=false" >> "$GITHUB_OUTPUT"
           fi
+          echo "subject: $subject"
 
       # Bump before building, so the executable carries the version it ships as.
       - name: Bump the patch version
