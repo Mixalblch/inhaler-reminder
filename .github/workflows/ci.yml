@@ -1,7 +1,8 @@
 name: CI
 
-# Every push to main produces a downloadable .exe, so main is always known to
-# build and there is a binary to try without waiting for a release.
+# A push to main that passes the checks publishes a release: the patch version
+# is bumped, the executable is built from that version, and both are pushed.
+# Pull requests run the same checks without publishing anything.
 on:
   push:
     branches: [main]
@@ -9,9 +10,13 @@ on:
     branches: [main]
   workflow_dispatch:
 
+permissions:
+  contents: write
+
 concurrency:
   group: ci-${{ github.ref }}
-  cancel-in-progress: true
+  # A run that is midway through tagging and publishing must not be cancelled.
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
   build:
@@ -48,21 +53,70 @@ jobs:
       - name: Smoke-test the packaged entry point
         run: npm run smoke
 
+      - name: Decide whether this push publishes a release
+        id: gate
+        shell: bash
+        # The message goes through the environment: interpolating it into the
+        # script would let a commit message run commands here.
+        env:
+          HEAD_MESSAGE: ${{ github.event.head_commit.message }}
+        run: |
+          if [ "${{ github.event_name }}" = "push" ] \
+            && [ "${{ github.ref }}" = "refs/heads/main" ] \
+            && [[ "$HEAD_MESSAGE" != *"[no release]"* ]]; then
+            echo "release=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "release=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      # Bump before building, so the executable carries the version it ships as.
+      - name: Bump the patch version
+        if: steps.gate.outputs.release == 'true'
+        run: npm version patch --no-git-tag-version
+
+      - name: Resolve the version
+        shell: pwsh
+        run: |
+          $version = (Get-Content package.json -Raw | ConvertFrom-Json).version
+          "VERSION=$version" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
+
       - name: Build portable executable
         run: npm run dist
 
       - name: Give the build a clean name
         shell: pwsh
         run: |
-          $version = (Get-Content package.json -Raw | ConvertFrom-Json).version
-          $built = "dist/Inhaler Reminder $version.exe"
+          $built = "dist/Inhaler Reminder $env:VERSION.exe"
           if (-not (Test-Path $built)) { throw "expected build not found: $built" }
-          Move-Item $built "dist/InhalerReminder-$version-portable.exe"
-          "ARTIFACT_VERSION=$version" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
+          Move-Item $built "dist/InhalerReminder-$env:VERSION-portable.exe"
 
       - uses: actions/upload-artifact@v4
         with:
-          name: InhalerReminder-${{ env.ARTIFACT_VERSION }}-portable
+          name: InhalerReminder-${{ env.VERSION }}-portable
           path: dist/InhalerReminder-*-portable.exe
           retention-days: 30
           if-no-files-found: error
+
+      # Pushed with GITHUB_TOKEN, which by design does not start another run —
+      # the [skip ci] marker makes that explicit for anyone reading the history.
+      - name: Record the release commit and tag
+        if: steps.gate.outputs.release == 'true'
+        shell: pwsh
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add package.json package-lock.json
+          git commit -m "chore: release v$env:VERSION [skip ci]"
+          git tag "v$env:VERSION"
+          git push origin HEAD:main
+          git push origin "v$env:VERSION"
+
+      - name: Publish the release
+        if: steps.gate.outputs.release == 'true'
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          $asset = "dist/InhalerReminder-$env:VERSION-portable.exe#Inhaler Reminder $env:VERSION (portable, Windows x64)"
+          gh release create "v$env:VERSION" $asset --title "v$env:VERSION" --generate-notes
+          if ($LASTEXITCODE -ne 0) { throw "failed to publish v$env:VERSION" }
