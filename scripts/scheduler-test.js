@@ -234,4 +234,32 @@ at(13, 0);
   assert.strictEqual(s.currentDoseKey(clock), 'evening', 'once morning expires, evening is next');
 }
 
+
+// --- midnight rollover tells the app --------------------------------------
+// Regression: the day reset silently, so an open settings window kept showing
+// the previous day's doses until something else happened to fire.
+at(23, 58);
+{
+  const cfg = cloneConfig();
+  const day = {
+    morning: { status: 'confirmed', snoozeUntil: 0 },
+    evening: { status: 'confirmed', snoozeUntil: 0 }
+  };
+  const h = harness(cfg, day);
+  const rolled = [];
+  h.options.onDayChanged = function (key) { rolled.push(key); };
+  const s = loadScheduler();
+  s.start(h.options);
+  assert.strictEqual(s.getState().day, '2026-08-27');
+  assert.deepStrictEqual(rolled, [], 'starting up is not a rollover');
+
+  clock = new RealDate(2026, 7, 28, 0, 5, 0);
+  s.tick();
+  assert.strictEqual(s.getState().day, '2026-08-28', 'the scheduler moves to the new day');
+  assert.deepStrictEqual(rolled, ['2026-08-28'], 'the app is told the day changed');
+
+  s.tick();
+  assert.deepStrictEqual(rolled, ['2026-08-28'], 'a rollover is announced once, not every tick');
+}
+
 console.log('SCHEDULER_TEST_OK');

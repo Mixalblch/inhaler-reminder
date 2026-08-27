@@ -37,14 +37,17 @@
 
   function formatDuration(minutes) {
     var value = Math.max(0, Number(minutes) || 0);
-    if (value >= 60 && value % 60 === 0) {
-      var hours = value / 60;
-      return hours === 1 && STR['units.oneHour'] ? t('units.oneHour') : hours + ' ' + t('units.hours');
-    }
-    if (value >= 60) {
-      return Math.floor(value / 60) + ' ' + t('units.hours') + ' ' + (value % 60) + ' ' + t('units.minutes');
-    }
-    return value + ' ' + t('units.minutes');
+    if (value < 60) return value + ' ' + t('units.minutes');
+    var hours = Math.floor(value / 60);
+    var rest = value % 60;
+    if (rest === 0) return hours + ' ' + t('units.hours');
+    return hours + ' ' + t('units.hours') + ' ' + rest + ' ' + t('units.minutes');
+  }
+
+  // The snooze buttons carry the long form ("1 час"); a stepper readout would
+  // be too cramped for it, so it is not used by formatDuration.
+  function snoozeChoiceLabel(minutes) {
+    return minutes === 60 ? t('units.oneHour') : formatDuration(minutes);
   }
 
   function applyTheme(appearance) {
@@ -122,7 +125,7 @@
     text('undoBtn', t('history.undo'));
 
     sheet.querySelectorAll('[data-snooze]').forEach(function (button) {
-      button.textContent = formatDuration(Number(button.dataset.snooze));
+      button.textContent = snoozeChoiceLabel(Number(button.dataset.snooze));
     });
   }
 
@@ -193,6 +196,12 @@
         hideSoon(0);
       }, AUTO_SNOOZE_MS);
     });
+  });
+
+  // On "System", the OS can flip while the reminder is on screen; without this
+  // the window keeps whatever theme it opened with.
+  window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', function () {
+    if (payload && (payload.appearance || 'system') === 'system') applyTheme('system');
   });
 
   if (window.api && typeof window.api.onNotification === 'function') {

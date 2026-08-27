@@ -6,9 +6,25 @@
 //
 // Development only: `scripts/` is not part of the packaged app.
 
+const os = require('os');
 const path = require('path');
 const { writeJsonAtomic } = require('../src/main/atomic-store');
 const schedule = require('../src/main/schedule');
+
+// Seeding is destructive: it replaces the adherence record wholesale. Refuse to
+// do that anywhere but a scratch profile, so a caller that forgets to redirect
+// userData fails loudly instead of eating the user's history.
+function assertScratchProfile(userDataPath) {
+  const target = path.resolve(userDataPath);
+  const temp = path.resolve(os.tmpdir());
+  const inTemp = target === temp || target.toLowerCase().startsWith(temp.toLowerCase() + path.sep);
+  if (!inTemp) {
+    throw new Error(
+      'refusing to seed outside a temp profile: ' + target +
+      '\nCall app.setPath("userData", ...) before seeding.'
+    );
+  }
+}
 
 // Matches the mock's own arrays. 't' taken, 'm' missed, 'p' pending.
 const MORNING = ['t', 't', 't', 't', 't', 'm', 't', 't', 't', 't', 't', 't', 't', 't'];
@@ -28,6 +44,7 @@ function entry(code, day, hour, minute) {
 }
 
 function seed(userDataPath, now) {
+  assertScratchProfile(userDataPath);
   const today = now instanceof Date ? now : new Date();
   const days = {};
 

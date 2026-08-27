@@ -6,7 +6,7 @@
   "main": "src/main/main.js",
   "scripts": {
     "start": "electron .",
-    "smoke": "electron . --smoke",
+    "smoke": "node scripts/smoke.js",
     "test:config": "node scripts/config-test.js",
     "test:history": "node scripts/history-test.js",
     "test:scheduler": "node scripts/scheduler-test.js",

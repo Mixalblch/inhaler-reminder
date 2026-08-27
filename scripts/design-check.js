@@ -108,6 +108,14 @@ assert.ok(/stroke-dasharray:\s*30/.test(notificationCss), 'the confirmation tick
 assert.ok(/<path d="M20 6 9 17l-5-5"/.test(notificationHtml), 'the tick must be vector artwork');
 assert.ok(/<svg class="chevron"/.test(settingsHtml), 'the chevron must be vector artwork');
 
+// The long "1 час" form belongs to the reminder's snooze buttons. In a stepper
+// the design reads "1 ч", so the settings surface must not reach for it.
+const settingsJs = read('src/renderer/settings/settings.js');
+assert.ok(!/units\.oneHour/.test(settingsJs),
+  'settings must format an hour as "1 ч", not the reminder\'s "1 час"');
+assert.ok(/units\.oneHour/.test(read('src/renderer/notification/notification.js')),
+  'the reminder still needs the long hour form for its snooze buttons');
+
 // The snooze choices sit in the flow above the actions, not in a floating panel.
 assert.ok(!/\.snooze-sheet\s*\{[^}]*position:\s*absolute/.test(notificationCss),
   'the snooze sheet must expand inline');

@@ -12,6 +12,11 @@ const { app, BrowserWindow } = require('electron');
 const fs = require('fs');
 const path = require('path');
 
+// Must happen before anything reads a path: seeding a staged schedule and a
+// fake history into the real profile would overwrite the user's own settings
+// and adherence record.
+app.setPath('userData', path.join(app.getPath('temp'), 'inhaler-screenshots-' + process.pid));
+
 const config = require('../src/main/config');
 const i18n = require('../src/main/i18n');
 const { seed } = require('./qa-seed');

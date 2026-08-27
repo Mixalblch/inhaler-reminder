@@ -74,8 +74,14 @@ function tick() {
   const now = new Date();
   const today = schedule.localDayKey(now);
   if (!state || state.day !== today) {
+    // Midnight resets the day. Anything showing yesterday's doses — the open
+    // settings window, the tray — has to be told, or it stays stale until the
+    // next reminder happens to fire.
+    const rolled = !!state && state.day !== today;
     pendingWindow = null;
     state = freshState(now);
+    if (rolled && options.onDayChanged) options.onDayChanged(today);
+    if (rolled) changed();
   }
 
   const cfg = config();

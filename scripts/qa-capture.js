@@ -120,10 +120,15 @@ async function notificationChecks(win) {
 // Moves the evening window over the current time so the scheduler fires it for
 // real. The displayed range is therefore live data, not the mock's 18:00—21:00.
 function makeEveningDue(config) {
-  const now = new Date();
-  const start = Math.max(0, schedule.minutesOfDay(now) - 60);
+  const now = schedule.minutesOfDay(new Date());
+  // Keep the range inside the day: a window that wrapped past midnight would be
+  // rejected as inverted, and the reminder would never fire.
+  const end = Math.min(1439, Math.max(now + 30, 180));
+  const start = Math.max(0, Math.min(now, end - 1));
   return config.set({
-    windows: { evening: { enabled: true, start: schedule.formatTime(start), end: schedule.formatTime(start + 180) } }
+    windows: {
+      evening: { enabled: true, start: schedule.formatTime(start), end: schedule.formatTime(end) }
+    }
   });
 }
 

@@ -30,12 +30,20 @@ if (captureDir) {
 
 const gotLock = app.requestSingleInstanceLock();
 if (!gotLock) {
+  // A second launch hands over to the running copy. Say so under --smoke:
+  // otherwise the check exits 0 without having started anything.
+  if (isSmoke) console.log('SMOKE_SKIPPED another instance is already running');
   app.quit();
 } else {
   app.on('second-instance', function () { showSettings(); });
   app.on('before-quit', function () { quitting = true; });
   app.on('window-all-closed', function () { /* keep running in tray */ });
-  app.whenReady().then(onReady);
+  // Without this a failure in onReady is swallowed as an unhandled rejection:
+  // the process lingers with no tray, no window, and no message.
+  app.whenReady().then(onReady).catch(function (error) {
+    console.error('Failed to start:', error);
+    app.exit(1);
+  });
 }
 
 function onReady() {
@@ -77,6 +85,12 @@ function onReady() {
     clearSnooze: history.clearSnooze,
     undoConfirmed: function (day, dose) {
       history.undoTodayConfirmation(day, dose);
+      broadcastHistory();
+    },
+    onDayChanged: function () {
+      // Open today's entries for the new day and push the fresh record to the
+      // settings window, which would otherwise keep rendering yesterday.
+      history.sync(config.get(), new Date());
       broadcastHistory();
     },
     onStateChanged: function () {

@@ -35,17 +35,15 @@
     return String(Math.floor(total / 60)).padStart(2, '0') + ':' + String(total % 60).padStart(2, '0');
   }
 
+  // "15 мин" / "1 ч" / "1 ч 30 мин". The long form ("1 час") belongs only to the
+  // reminder's snooze buttons, where it stands alone rather than in a stepper.
   function formatDuration(minutes) {
     var value = Math.max(0, Number(minutes) || 0);
-    if (value >= 60) {
-      var hours = Math.floor(value / 60);
-      var rest = value % 60;
-      if (rest === 0) {
-        return hours === 1 && STR['units.oneHour'] ? t('units.oneHour') : hours + ' ' + t('units.hours');
-      }
-      return hours + ' ' + t('units.hours') + ' ' + rest + ' ' + t('units.minutes');
-    }
-    return value + ' ' + t('units.minutes');
+    if (value < 60) return value + ' ' + t('units.minutes');
+    var hours = Math.floor(value / 60);
+    var rest = value % 60;
+    if (rest === 0) return hours + ' ' + t('units.hours');
+    return hours + ' ' + t('units.hours') + ' ' + rest + ' ' + t('units.minutes');
   }
 
   function parseDay(dayKey) {
@@ -252,7 +250,7 @@
 
     var days = history.days;
     el('historyStartDate').textContent = shortDate(days[0].date);
-    el('historyMiddleDate').textContent = String(parseDay(days[Math.floor(days.length / 2)].date).getDate());
+    el('historyMiddleDate').textContent = String(parseDay(days[Math.floor((days.length - 1) / 2)].date).getDate());
     el('historyEndDate').textContent = shortDate(days[days.length - 1].date);
 
     renderNotice();
