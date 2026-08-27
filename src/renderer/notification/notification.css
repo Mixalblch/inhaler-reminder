@@ -1,11 +1,56 @@
+/* Inhaler Reminder — always-on-top reminder.
+   Claude Design direction 2a "Дыхание", 400 × 236. */
+
 :root {
-  --paper: #fbf8f0;
-  --ink: #28251f;
-  --clay: #c45f42;
-  --clay-dark: #8f432f;
-  --sage: #61705c;
-  --line: #b8afa2;
-  --muted: #6f685e;
+  --surface: rgba(255, 255, 255, .94);
+  --surface-edge: rgba(255, 255, 255, .6);
+  --text: #1c1c1e;
+  --secondary: #8a8a8e;
+  --faint: #b0b0b3;
+
+  --accent: #12a594;
+  --accent-hover: #0e8d7e;
+  --accent-text: #ffffff;
+
+  --dose: #5b62d6;
+  --snoozed: #e9a23b;
+  --snoozed-text: #b57a1e;
+
+  --ornament: rgba(18, 165, 148, .10);
+
+  --line: rgba(60, 60, 67, .16);
+  --line-strong: rgba(60, 60, 67, .18);
+  --sheet-button: #ffffff;
+  --sheet-button-hover: #f7f7f5;
+  --secondary-bg: rgba(255, 255, 255, .7);
+  --secondary-hover: #f2f2f0;
+
+  --spring: cubic-bezier(.32, .72, 0, 1);
+}
+
+html[data-theme="dark"] {
+  --surface: rgba(28, 28, 30, .9);
+  --surface-edge: rgba(255, 255, 255, .14);
+  --text: #f5f5f7;
+  --secondary: #98989e;
+  --faint: #8e8e93;
+
+  --accent: #2fd3bc;
+  --accent-hover: #54e2cd;
+  --accent-text: #07211e;
+
+  --dose: #8b90ec;
+  --snoozed: #f0b054;
+  --snoozed-text: #f0b054;
+
+  --ornament: rgba(47, 211, 188, .13);
+
+  --line: rgba(255, 255, 255, .16);
+  --line-strong: rgba(255, 255, 255, .18);
+  --sheet-button: #2c2c2e;
+  --sheet-button-hover: #3a3a3c;
+  --secondary-bg: rgba(255, 255, 255, .06);
+  --secondary-hover: #2c2c2e;
 }
 
 @font-face {
@@ -34,181 +79,273 @@ body {
   height: 100%;
   margin: 0;
   overflow: hidden;
-  color: var(--ink);
+  color: var(--text);
   background: transparent;
-  font-family: "Manrope Local", sans-serif;
+  font-family: -apple-system, "SF Pro Text", "Segoe UI Variable Text", "Manrope Local", sans-serif;
   -webkit-font-smoothing: antialiased;
-  text-rendering: optimizeLegibility;
   user-select: none;
 }
 
-::selection {
-  color: var(--paper);
-  background: var(--clay-dark);
-}
+button { font: inherit; color: inherit; }
 
-.notification-card {
-  position: absolute;
-  inset: 10px;
-  display: grid;
-  grid-template-columns: 112px minmax(0, 1fr);
-  overflow: hidden;
-  color: var(--ink);
-  background: var(--paper);
-  border: 1px solid var(--line);
-  border-radius: 10px;
-  box-shadow: 0 18px 38px rgba(37, 31, 24, 0.28), 0 4px 12px rgba(37, 31, 24, 0.16);
-  opacity: 1;
-  transform: translateY(0);
-  transform-origin: bottom right;
-  transition: opacity 220ms ease-out, transform 250ms cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-.notification-card.is-visible {
-  opacity: 1;
-  transform: translateY(0);
-  animation: notification-in 240ms cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-.notification-card.is-leaving {
-  opacity: 0;
-  transform: translateY(8px);
-  transition-duration: 180ms;
-}
-
-.notification-art {
-  position: relative;
-  overflow: hidden;
-  background: var(--ink);
-}
-
-.notification-art .brand-mark {
-  position: absolute;
-  z-index: 2;
-  top: 12px;
-  left: 14px;
-  width: 23px;
-  height: 23px;
-  color: #ed7957;
-}
-
-.notification-art img {
-  position: absolute;
-  left: -17px;
-  bottom: -32px;
-  width: 153px;
-  height: auto;
-  filter: drop-shadow(0 10px 10px rgba(0, 0, 0, 0.3));
-  transform: rotate(-4deg);
-}
-
-.notification-content {
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-  padding: 14px 15px 13px;
-}
-
-.chip {
-  align-self: flex-start;
-  color: var(--clay-dark);
-  font-family: "Cascadia Mono", Consolas, monospace;
-  font-size: 9px;
-  font-weight: 700;
-  letter-spacing: 0.055em;
-  line-height: 1.3;
-  text-transform: uppercase;
-}
-
-.chip.is-evening {
-  color: var(--sage);
-}
-
-.title {
-  margin: 8px 0 0;
-  font-size: 17px;
-  font-weight: 720;
-  line-height: 1.16;
-  letter-spacing: -0.015em;
-}
-
-.body {
-  margin: 7px 0 0;
-  color: var(--muted);
-  font-size: 10.5px;
-  line-height: 1.4;
-}
-
-.actions {
-  display: flex;
-  gap: 7px;
-  margin-top: auto;
-}
-
-.btn {
-  min-height: 33px;
-  padding: 0 10px;
-  border: 1px solid var(--line);
-  border-radius: 6px;
-  font-family: inherit;
-  font-size: 10.5px;
-  font-weight: 650;
-  white-space: nowrap;
-  cursor: pointer;
-  transition: color 130ms ease-out, background 130ms ease-out, border-color 130ms ease-out, transform 100ms ease-out;
-}
-
-.btn:hover {
-  border-color: #8f867a;
-}
-
-.btn:active {
-  transform: translateY(1px);
-}
-
-.btn:focus-visible {
-  outline: 2px solid var(--clay-dark);
+button:focus-visible {
+  outline: 2px solid var(--accent);
   outline-offset: 2px;
 }
 
-.btn:disabled {
-  cursor: not-allowed;
-  opacity: 0.55;
+.card {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  border: 1px solid var(--surface-edge);
+  border-radius: 20px;
+  background: var(--surface);
+  backdrop-filter: blur(30px);
+  box-shadow: 0 30px 70px -24px rgba(28, 28, 30, .42), 0 2px 6px rgba(28, 28, 30, .1);
+  transition: opacity 200ms ease, transform 220ms var(--spring);
+  transform-origin: bottom right;
 }
 
-.btn-primary {
-  color: #fff9ef;
-  background: var(--clay-dark);
-  border-color: var(--clay-dark);
+.card.is-visible { animation: card-in 240ms var(--spring); }
+
+.card.is-leaving {
+  opacity: 0;
+  transform: translateY(8px) scale(.985);
 }
 
-.btn-primary:hover {
-  background: var(--ink);
-  border-color: var(--ink);
+.breath-mark {
+  position: absolute;
+  right: -34px;
+  bottom: -46px;
+  width: 250px;
+  height: 250px;
+  color: var(--ornament);
+  pointer-events: none;
 }
 
-.btn-secondary {
-  color: var(--ink);
-  background: #fffdf7;
+/* ---------- idle ---------- */
+
+.idle-view {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
 }
 
-.btn-secondary:hover {
-  background: #eee8de;
+.idle-view[hidden] { display: none; }
+
+.copy {
+  padding: 20px 22px 0;
+  animation: soft-in 300ms var(--spring);
 }
 
-@keyframes notification-in {
-  from {
-    opacity: 0.76;
-    transform: translateY(8px);
-  }
+.dose-meta {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.dose-dot {
+  width: 7px;
+  height: 7px;
+  flex: none;
+  border-radius: 999px;
+  background: var(--dose);
+}
+
+.chip {
+  color: var(--dose);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+
+.dose-window {
+  color: var(--faint);
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+}
+
+/* The snoozed state recolours the same meta row rather than swapping views. */
+.idle-view.snoozed .dose-dot { background: var(--snoozed); }
+.idle-view.snoozed .chip { color: var(--snoozed-text); }
+
+#notifTitle {
+  max-width: 330px;
+  margin: 11px 0 0;
+  font-size: 21px;
+  font-weight: 600;
+  line-height: 1.18;
+  letter-spacing: -.03em;
+  text-wrap: pretty;
+}
+
+#notifBody {
+  max-width: 290px;
+  margin: 7px 0 0;
+  color: var(--secondary);
+  font-size: 13px;
+  line-height: 1.4;
+  text-wrap: pretty;
+}
+
+/* ---------- actions ---------- */
+
+.actions {
+  margin-top: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  padding: 16px 20px;
+}
+
+/* Choices expand in the flow above the buttons — nothing floats over the card. */
+.snooze-sheet {
+  display: flex;
+  gap: 7px;
+  animation: soft-in 240ms var(--spring);
+}
+
+.snooze-sheet[hidden] { display: none; }
+
+.snooze-sheet button {
+  flex: 1;
+  height: 36px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--sheet-button);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 160ms ease;
+}
+
+.snooze-sheet button:hover { background: var(--sheet-button-hover); }
+
+.action-row {
+  display: flex;
+  gap: 9px;
+}
+
+.btn {
+  height: 42px;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: background 200ms ease, transform 160ms ease;
+}
+
+.btn:active { transform: scale(.985); }
+
+.primary {
+  flex: 1;
+  border: 0;
+  background: var(--accent);
+  color: var(--accent-text);
+  font-size: 14.5px;
+  font-weight: 600;
+  letter-spacing: -.01em;
+}
+
+.primary:hover { background: var(--accent-hover); }
+
+.secondary {
+  width: 132px;
+  border: 1px solid var(--line-strong);
+  background: var(--secondary-bg);
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.secondary:hover { background: var(--secondary-hover); }
+
+/* ---------- result ---------- */
+
+.result-view {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 13px;
+  height: 100%;
+  animation: soft-in 300ms var(--spring);
+}
+
+.result-view[hidden] { display: none; }
+
+.result-ring {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 56px;
+  height: 56px;
+  border-radius: 999px;
+  background: var(--accent);
+  animation: ring-in 380ms var(--spring);
+}
+
+.result-ring svg { width: 30px; height: 30px; }
+
+/* The tick draws itself in, matching the source's confirmation moment. */
+.result-ring path {
+  stroke-dasharray: 30;
+  animation: draw-check 420ms 100ms var(--spring) both;
+}
+
+.result-title {
+  font-size: 17px;
+  font-weight: 600;
+  letter-spacing: -.02em;
+}
+
+.result-subtitle {
+  margin-top: -9px;
+  color: var(--secondary);
+  font-size: 12.5px;
+}
+
+.undo {
+  position: absolute;
+  top: 14px;
+  right: 16px;
+  padding: 2px;
+  border: 0;
+  background: none;
+  color: var(--faint);
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.undo:hover { color: var(--text); }
+.undo[hidden] { display: none; }
+
+/* ---------- motion ---------- */
+
+@keyframes card-in {
+  from { opacity: .72; transform: translateY(8px) scale(.985); }
+}
+
+@keyframes soft-in {
+  from { opacity: 0; transform: translateY(6px); }
+}
+
+@keyframes ring-in {
+  from { opacity: 0; transform: scale(.86); }
+}
+
+@keyframes draw-check {
+  from { stroke-dashoffset: 30; }
+  to { stroke-dashoffset: 0; }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  *,
-  *::before,
-  *::after {
-    transition-duration: 0.01ms !important;
-    animation-duration: 0.01ms !important;
+  *, *::before, *::after {
+    animation-duration: .01ms !important;
     animation-iteration-count: 1 !important;
+    transition-duration: .01ms !important;
   }
+  .result-ring path { stroke-dashoffset: 0; }
 }

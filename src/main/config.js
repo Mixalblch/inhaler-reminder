@@ -1,10 +1,12 @@
 const { app } = require('electron');
 const fs = require('fs');
 const path = require('path');
+const { writeJsonAtomic, readJsonWithBackup } = require('./atomic-store');
 
 const DEFAULTS = {
   version: 1,
   locale: 'ru',
+  appearance: 'system',
   soundEnabled: true,
   autostart: false,
   snoozeMinutes: 15,
@@ -40,48 +42,57 @@ function isValidTime(s) {
   return Number.isInteger(h) && Number.isInteger(m) && h >= 0 && h <= 23 && m >= 0 && m <= 59;
 }
 
+function toMinutes(value) {
+  return Number(value.slice(0, 2)) * 60 + Number(value.slice(3, 5));
+}
+
+// A window must be a forward range inside one day. If a patch would invert it,
+// the whole window falls back rather than leaving an unreachable schedule.
 function normalizeWindow(w, def) {
   const src = (w && typeof w === 'object') ? w : {};
+  const start = isValidTime(src.start) ? src.start : def.start;
+  const end = isValidTime(src.end) ? src.end : def.end;
+  const ordered = toMinutes(start) < toMinutes(end);
   return {
     enabled: typeof src.enabled === 'boolean' ? src.enabled : def.enabled,
-    start: isValidTime(src.start) ? src.start : def.start,
-    end: isValidTime(src.end) ? src.end : def.end
+    start: ordered ? start : def.start,
+    end: ordered ? end : def.end
   };
 }
 
-function normalize(input) {
-  if (!input || typeof input !== 'object') input = {};
-  const w = (input.windows && typeof input.windows === 'object') ? input.windows : {};
+// `fallback` keeps a partial patch from resetting untouched fields to DEFAULTS.
+function normalize(input, fallback) {
+  const src = (input && typeof input === 'object') ? input : {};
+  const base = (fallback && typeof fallback === 'object') ? fallback : DEFAULTS;
+  const w = (src.windows && typeof src.windows === 'object') ? src.windows : {};
   return {
     version: 1,
-    locale: (input.locale === 'en') ? 'en' : 'ru',
-    soundEnabled: typeof input.soundEnabled === 'boolean' ? input.soundEnabled : DEFAULTS.soundEnabled,
-    autostart: typeof input.autostart === 'boolean' ? input.autostart : DEFAULTS.autostart,
-    snoozeMinutes: clampInt(input.snoozeMinutes, 1, 180, DEFAULTS.snoozeMinutes),
-    graceMinutes: clampInt(input.graceMinutes, 0, 360, DEFAULTS.graceMinutes),
-    idleThresholdSeconds: clampInt(input.idleThresholdSeconds, 5, 600, DEFAULTS.idleThresholdSeconds),
+    locale: (src.locale === 'en' || src.locale === 'ru') ? src.locale : base.locale,
+    appearance: (src.appearance === 'system' || src.appearance === 'light' || src.appearance === 'dark')
+      ? src.appearance
+      : base.appearance,
+    soundEnabled: typeof src.soundEnabled === 'boolean' ? src.soundEnabled : base.soundEnabled,
+    autostart: typeof src.autostart === 'boolean' ? src.autostart : base.autostart,
+    snoozeMinutes: clampInt(src.snoozeMinutes, 1, 180, base.snoozeMinutes),
+    graceMinutes: clampInt(src.graceMinutes, 0, 360, base.graceMinutes),
+    idleThresholdSeconds: clampInt(src.idleThresholdSeconds, 5, 600, base.idleThresholdSeconds),
     windows: {
-      morning: normalizeWindow(w.morning, DEFAULTS.windows.morning),
-      evening: normalizeWindow(w.evening, DEFAULTS.windows.evening)
+      morning: normalizeWindow(w.morning, base.windows.morning),
+      evening: normalizeWindow(w.evening, base.windows.evening)
     }
   };
 }
 
 function load() {
   if (cached) return cached;
-  try {
-    const raw = fs.readFileSync(configFilePath(), 'utf8');
-    cached = normalize(JSON.parse(raw));
-  } catch (e) {
-    cached = normalize(null);
-  }
+  cached = normalize(readJsonWithBackup(configFilePath()), DEFAULTS);
   return cached;
 }
 
 function save() {
   const cfg = load();
   fs.mkdirSync(path.dirname(configFilePath()), { recursive: true });
-  fs.writeFileSync(configFilePath(), JSON.stringify(cfg, null, 2), 'utf8');
+  writeJsonAtomic(configFilePath(), cfg);
   return cfg;
 }
 
@@ -98,9 +109,26 @@ function set(patch) {
     };
   }
   const merged = Object.assign({}, current, p, { windows: windows });
-  cached = normalize(merged);
+  cached = normalize(merged, current);
   save();
   return cached;
 }
 
-module.exports = { get, set, save, DEFAULTS };
+function setFilePathForTests(target) {
+  configPath = target;
+  cached = null;
+}
+
+function resetForTests() {
+  configPath = null;
+  cached = null;
+}
+
+module.exports = {
+  get: get,
+  set: set,
+  save: save,
+  DEFAULTS: DEFAULTS,
+  _setFilePathForTests: setFilePathForTests,
+  _resetForTests: resetForTests
+};

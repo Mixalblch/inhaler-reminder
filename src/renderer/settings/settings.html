@@ -1,158 +1,253 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ru">
 <head>
   <meta charset="UTF-8" />
   <meta http-equiv="Content-Security-Policy" content="default-src 'self'" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Settings</title>
+  <title>Inhaler Reminder</title>
   <link rel="stylesheet" href="settings.css" />
 </head>
 <body>
-  <!--
-    THESIS: Breath Console makes a twice-daily health routine feel like a calm, dependable instrument and refuses the category's teal glass card stack.
-    OWN-WORLD: warm paper workspace, charcoal equipment rail, clay actions, sage confirmation, thin rules, and one authored inhaler illustration.
-    STORY: set morning and evening windows, tune notification behavior, confirm preferences, then let the app recede into the Windows tray.
-    FIRST VIEWPORT: a narrow object rail anchors the left edge; schedule leads the ruled workspace; notification and preference controls follow; tray behavior closes the frame.
-    FORM: compact equipment ledger, user-pinned direction, seed 26ff0634.
-    FINISH: unreviewed and undocumented is unfinished; this build ends with the finish review, the verdict, DESIGN.md, and every shipping raster carrying its provenance
-  -->
-  <div class="app">
-    <aside class="app-rail" aria-labelledby="railName">
-      <svg class="brand-mark" viewBox="0 0 28 28" fill="none" aria-hidden="true">
-        <circle cx="14" cy="14" r="3" fill="currentColor" />
-        <path d="M14 2v7M14 19v7M2 14h7M19 14h7M5.5 5.5l5 5M17.5 17.5l5 5M22.5 5.5l-5 5M10.5 17.5l-5 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
-      </svg>
-      <div class="rail-name" id="railName" data-i18n="app.name">Inhaler</div>
-      <div class="rail-rule" aria-hidden="true"></div>
-      <div class="rail-meta" data-i18n="settings.localTray">Local Windows Tray</div>
-      <img class="rail-art" src="../../../assets/inhaler-illustration.png" alt="" aria-hidden="true" />
-    </aside>
+  <div class="app-shell">
+    <header class="topbar">
+      <strong data-i18n="app.name">Ингалятор</strong>
+      <div class="saved" id="savedIndicator" role="status" aria-live="polite">
+        <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <path d="M20 6 9 17l-5-5" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" />
+        </svg>
+        <span data-i18n="settings.saved">Сохранено</span>
+      </div>
+    </header>
 
-    <div class="workspace">
-      <header class="header">
-        <h1 class="title" data-i18n="settings.title">Settings</h1>
-        <div class="saved" id="savedIndicator" role="status" aria-live="polite">
-          <svg class="saved-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-            <path d="M20 6 9 17l-5-5" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" />
-          </svg>
-          <span data-i18n="settings.saved">Saved</span>
+    <main class="content">
+      <section class="today-section" aria-labelledby="todayLabel">
+        <div class="section-title" id="todayLabel" data-i18n="today.label">Сегодня</div>
+        <div class="today-heading">
+          <div>
+            <h1 id="todayHeadline"></h1>
+            <p id="todayDescription"></p>
+          </div>
+          <div class="today-status-dots" id="todayDots">
+            <span id="morningTodayDot"></span>
+            <span id="eveningTodayDot"></span>
+          </div>
         </div>
-      </header>
+        <div class="day-track" aria-hidden="true">
+          <span class="track-window morning"></span>
+          <span class="track-window evening"></span>
+          <span class="track-now" id="trackNow"></span>
+          <span class="track-now-pulse" id="trackNowPulse"></span>
+        </div>
+      </section>
 
-      <main class="content">
-        <section class="section">
-          <h2 class="section-title" data-i18n="settings.schedule">Schedule</h2>
+      <div class="missed-card" id="missedCard" hidden>
+        <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.7" stroke-dasharray="3 3.4" />
+        </svg>
+        <div class="missed-copy">
+          <strong id="missedTitle"></strong>
+          <span id="missedDescription"></span>
+        </div>
+        <button type="button" class="compact-button" id="backdateBtn"></button>
+      </div>
 
-          <div class="schedule-block">
-            <div class="block-header">
-              <div>
-                <div class="block-title" id="morningLabel" data-i18n="settings.morning">Morning</div>
-                <div class="block-note" data-i18n="settings.enabled">Enabled</div>
-              </div>
-            </div>
-            <div class="time-row">
-              <div class="field">
-                <label for="morningStart" data-i18n="settings.from">From</label>
-                <input type="time" id="morningStart" />
-              </div>
-              <svg class="time-arrow" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M2 8h10M9 5l3 3-3 3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" /></svg>
-              <div class="field">
-                <label for="morningEnd" data-i18n="settings.to">To</label>
-                <input type="time" id="morningEnd" />
-              </div>
-            </div>
-            <label class="switch">
-              <input type="checkbox" id="morningEnabled" aria-labelledby="morningLabel" />
-              <span class="slider"></span>
-            </label>
+      <div class="backdated-row" id="backdatedRow" hidden>
+        <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <path d="M20 6 9 17l-5-5" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" />
+        </svg>
+        <span id="backdatedText"></span>
+        <button type="button" id="undoBackdateBtn"></button>
+      </div>
+
+      <section class="history-section" aria-labelledby="historyLabel">
+        <div class="history-heading">
+          <h2 class="section-title" id="historyLabel" data-i18n="history.title">Последние 14 дней</h2>
+          <span class="history-score" id="historyScore"></span>
+        </div>
+        <div class="history-rows" id="historyChart" role="group" data-i18n-aria="a11y.history">
+          <div class="history-row">
+            <span class="history-label" data-i18n="history.morningRow">утро</span>
+            <div class="history-dots" id="morningHistory"></div>
           </div>
-
-          <div class="schedule-block">
-            <div class="block-header">
-              <div>
-                <div class="block-title" id="eveningLabel" data-i18n="settings.evening">Evening</div>
-                <div class="block-note" data-i18n="settings.enabled">Enabled</div>
-              </div>
-            </div>
-            <div class="time-row">
-              <div class="field">
-                <label for="eveningStart" data-i18n="settings.from">From</label>
-                <input type="time" id="eveningStart" />
-              </div>
-              <svg class="time-arrow" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M2 8h10M9 5l3 3-3 3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" /></svg>
-              <div class="field">
-                <label for="eveningEnd" data-i18n="settings.to">To</label>
-                <input type="time" id="eveningEnd" />
-              </div>
-            </div>
-            <label class="switch">
-              <input type="checkbox" id="eveningEnabled" aria-labelledby="eveningLabel" />
-              <span class="slider"></span>
-            </label>
+          <div class="history-row">
+            <span class="history-label" data-i18n="history.eveningRow">вечер</span>
+            <div class="history-dots" id="eveningHistory"></div>
           </div>
-        </section>
-
-        <section class="section">
-          <h2 class="section-title" data-i18n="settings.notifications">Notifications</h2>
-          <div class="number-grid">
-            <div class="field">
-              <label for="snooze" data-i18n="settings.snooze">Remind later after (min)</label>
-              <input type="number" id="snooze" min="1" max="180" step="1" />
-            </div>
-            <div class="field">
-              <label for="grace" data-i18n="settings.grace">Catch-up window (min)</label>
-              <input type="number" id="grace" min="0" max="360" step="1" />
+          <div class="history-dates" aria-hidden="true">
+            <span class="history-label"></span>
+            <div class="history-scale">
+              <span id="historyStartDate"></span>
+              <span id="historyMiddleDate"></span>
+              <span id="historyEndDate"></span>
             </div>
           </div>
-          <div class="hint">
-            <svg class="hint-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-              <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="2" />
-              <path d="M12 11v5" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
-              <circle cx="12" cy="8" r="1.1" fill="currentColor" />
+        </div>
+      </section>
+
+      <section class="section" aria-labelledby="scheduleTitle">
+        <h2 class="section-title" id="scheduleTitle" data-i18n="settings.schedule">Расписание</h2>
+        <div class="card">
+          <button type="button" class="dose-summary" data-editor="morningEditor" aria-expanded="false" aria-controls="morningEditor" data-i18n-aria="a11y.expandMorning">
+            <span class="dose-dot morning" aria-hidden="true"></span>
+            <span class="dose-main">
+              <strong data-i18n="settings.morning">Утро</strong>
+              <small id="morningStatus"></small>
+            </span>
+            <span class="dose-time" id="morningRange"></span>
+            <svg class="chevron" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <path d="M9 6l6 6-6 6" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" />
             </svg>
-            <p data-i18n="settings.graceHint">If you were away from the computer during the interval, the app will remind you within this time after it ends.</p>
+          </button>
+          <div class="dose-editor" id="morningEditor">
+            <div class="dose-editor-inner">
+              <div class="editor-row">
+                <span data-i18n="settings.from">Начало</span>
+                <div class="stepper">
+                  <button type="button" data-time-step="-15" data-target="morningStart" data-i18n-aria="a11y.timeEarlier">−</button>
+                  <span class="value" id="morningStartValue"></span>
+                  <button type="button" data-time-step="15" data-target="morningStart" data-i18n-aria="a11y.timeLater">+</button>
+                </div>
+                <label class="sr-only" for="morningStart" data-i18n="settings.from">Начало</label>
+                <input class="sr-only" type="time" id="morningStart" step="900" />
+              </div>
+              <div class="editor-row">
+                <span data-i18n="settings.to">Конец</span>
+                <div class="stepper">
+                  <button type="button" data-time-step="-15" data-target="morningEnd" data-i18n-aria="a11y.timeEarlier">−</button>
+                  <span class="value" id="morningEndValue"></span>
+                  <button type="button" data-time-step="15" data-target="morningEnd" data-i18n-aria="a11y.timeLater">+</button>
+                </div>
+                <label class="sr-only" for="morningEnd" data-i18n="settings.to">Конец</label>
+                <input class="sr-only" type="time" id="morningEnd" step="900" />
+              </div>
+              <div class="editor-row toggle-row">
+                <span id="morningLabel" data-i18n="schedule.morningToggle">Напоминать утром</span>
+                <label class="switch">
+                  <input type="checkbox" id="morningEnabled" aria-labelledby="morningLabel" />
+                  <span class="slider"></span>
+                </label>
+              </div>
+            </div>
           </div>
-        </section>
 
-        <section class="section preferences">
-          <h2 class="section-title" id="prefsTitle" data-i18n="settings.preferences">Preferences</h2>
-          <div class="pref-row">
-            <span class="pref-label" id="soundLabel" data-i18n="settings.sound">Notification sound</span>
+          <div class="row-divider"></div>
+
+          <button type="button" class="dose-summary" data-editor="eveningEditor" aria-expanded="false" aria-controls="eveningEditor" data-i18n-aria="a11y.expandEvening">
+            <span class="dose-dot evening" aria-hidden="true"></span>
+            <span class="dose-main">
+              <strong data-i18n="settings.evening">Вечер</strong>
+              <small id="eveningStatus"></small>
+            </span>
+            <span class="dose-time" id="eveningRange"></span>
+            <svg class="chevron" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <path d="M9 6l6 6-6 6" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" />
+            </svg>
+          </button>
+          <div class="dose-editor" id="eveningEditor">
+            <div class="dose-editor-inner">
+              <div class="editor-row">
+                <span data-i18n="settings.from">Начало</span>
+                <div class="stepper">
+                  <button type="button" data-time-step="-15" data-target="eveningStart" data-i18n-aria="a11y.timeEarlier">−</button>
+                  <span class="value" id="eveningStartValue"></span>
+                  <button type="button" data-time-step="15" data-target="eveningStart" data-i18n-aria="a11y.timeLater">+</button>
+                </div>
+                <label class="sr-only" for="eveningStart" data-i18n="settings.from">Начало</label>
+                <input class="sr-only" type="time" id="eveningStart" step="900" />
+              </div>
+              <div class="editor-row">
+                <span data-i18n="settings.to">Конец</span>
+                <div class="stepper">
+                  <button type="button" data-time-step="-15" data-target="eveningEnd" data-i18n-aria="a11y.timeEarlier">−</button>
+                  <span class="value" id="eveningEndValue"></span>
+                  <button type="button" data-time-step="15" data-target="eveningEnd" data-i18n-aria="a11y.timeLater">+</button>
+                </div>
+                <label class="sr-only" for="eveningEnd" data-i18n="settings.to">Конец</label>
+                <input class="sr-only" type="time" id="eveningEnd" step="900" />
+              </div>
+              <div class="editor-row toggle-row">
+                <span id="eveningLabel" data-i18n="schedule.eveningToggle">Напоминать вечером</span>
+                <label class="switch">
+                  <input type="checkbox" id="eveningEnabled" aria-labelledby="eveningLabel" />
+                  <span class="slider"></span>
+                </label>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="section" aria-labelledby="remindersTitle">
+        <h2 class="section-title" id="remindersTitle" data-i18n="settings.notifications">Напоминания</h2>
+        <div class="card">
+          <div class="setting-row tight">
+            <span data-i18n="settings.snoozeShort">Отложить на</span>
+            <div class="stepper wide">
+              <button type="button" data-number-step="-5" data-target="snooze" data-i18n-aria="a11y.decrease">−</button>
+              <span class="value" id="snoozeValue"></span>
+              <button type="button" data-number-step="5" data-target="snooze" data-i18n-aria="a11y.increase">+</button>
+            </div>
+            <label class="sr-only" for="snooze" data-i18n="settings.snoozeShort">Отложить на</label>
+            <input class="sr-only" type="number" id="snooze" min="1" max="180" step="5" />
+          </div>
+          <div class="row-divider"></div>
+          <div class="setting-row tight">
+            <span data-i18n="settings.graceShort">Догонять в течение</span>
+            <div class="stepper wide">
+              <button type="button" data-number-step="-15" data-target="grace" data-i18n-aria="a11y.decrease">−</button>
+              <span class="value" id="graceValue"></span>
+              <button type="button" data-number-step="15" data-target="grace" data-i18n-aria="a11y.increase">+</button>
+            </div>
+            <label class="sr-only" for="grace" data-i18n="settings.graceShort">Догонять в течение</label>
+            <input class="sr-only" type="number" id="grace" min="0" max="360" step="15" />
+          </div>
+        </div>
+        <p class="section-note" data-i18n="settings.graceHint"></p>
+      </section>
+
+      <section class="section" aria-labelledby="prefsTitle">
+        <h2 class="section-title" id="prefsTitle" data-i18n="settings.preferences">Приложение</h2>
+        <div class="card">
+          <div class="setting-row">
+            <span id="soundLabel" data-i18n="settings.sound">Звук</span>
             <label class="switch">
               <input type="checkbox" id="soundEnabled" aria-labelledby="soundLabel" />
               <span class="slider"></span>
             </label>
           </div>
-          <div class="pref-row">
-            <label class="pref-label" for="language" data-i18n="settings.language">Language</label>
-            <div class="select-wrap">
-              <select id="language">
-                <option value="ru">Русский</option>
-                <option value="en">English</option>
-              </select>
-            </div>
-          </div>
-          <div class="pref-row">
-            <span class="pref-label" id="autostartLabel" data-i18n="settings.autostart">Start with Windows</span>
+          <div class="row-divider"></div>
+          <div class="setting-row">
+            <span id="autostartLabel" data-i18n="settings.autostart">Запуск с Windows</span>
             <label class="switch">
               <input type="checkbox" id="autostart" aria-labelledby="autostartLabel" />
               <span class="slider"></span>
             </label>
           </div>
-        </section>
-      </main>
-
-      <footer class="footer">
-        <div class="hint-row">
-          <svg class="footer-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-            <rect x="4" y="5" width="16" height="14" rx="2" stroke="currentColor" stroke-width="2" />
-            <path d="M8 12h8" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
-          </svg>
-          <span data-i18n="settings.minimizeHint">Closing hides the window to the system tray</span>
+          <div class="row-divider"></div>
+          <div class="setting-row tight">
+            <span data-i18n="settings.appearance">Оформление</span>
+            <div class="segmented" id="appearance" role="radiogroup" data-i18n-aria="a11y.appearance">
+              <button type="button" role="radio" data-appearance="system" data-i18n="appearance.system">Система</button>
+              <button type="button" role="radio" data-appearance="light" data-i18n="appearance.light">Светлая</button>
+              <button type="button" role="radio" data-appearance="dark" data-i18n="appearance.dark">Тёмная</button>
+            </div>
+          </div>
+          <div class="row-divider"></div>
+          <div class="setting-row tight">
+            <span data-i18n="settings.language">Язык</span>
+            <div class="segmented language-segmented" role="radiogroup" data-i18n-aria="a11y.language">
+              <button type="button" role="radio" data-locale="ru">RU</button>
+              <button type="button" role="radio" data-locale="en">EN</button>
+            </div>
+          </div>
         </div>
-        <button type="button" class="btn-quit" id="quitBtn" data-i18n="settings.quit">Quit</button>
-      </footer>
-    </div>
+      </section>
+    </main>
+
+    <footer class="footer">
+      <span data-i18n="settings.minimizeHint">Закрытие сворачивает в трей</span>
+      <button type="button" id="quitBtn" data-i18n="settings.quit">Выйти</button>
+    </footer>
   </div>
 
   <script src="settings.js"></script>

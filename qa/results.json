@@ -1,0 +1,25 @@
+{
+  "firedThroughScheduler": true,
+  "settings": {
+    "editorOpens": true,
+    "editorCloses": true,
+    "stepperRoundTrip": true,
+    "darkApplies": true,
+    "systemRestores": true,
+    "backdateShowsUndo": true,
+    "backdateUndoRestores": true,
+    "noHorizontalOverflow": true
+  },
+  "notification": {
+    "snoozeSheetOpens": true,
+    "snoozeSheetCloses": true,
+    "confirmShowsResult": true,
+    "undoRestoresIdle": true
+  },
+  "compact": {
+    "scrolls": true,
+    "horizontalOverflow": false,
+    "footerVisible": true
+  },
+  "consoleErrors": []
+}

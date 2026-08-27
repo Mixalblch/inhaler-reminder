@@ -1,13 +1,20 @@
 {
   "name": "inhaler-reminder",
   "productName": "Inhaler Reminder",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Asthma inhaler reminder for Windows",
   "main": "src/main/main.js",
   "scripts": {
     "start": "electron .",
     "smoke": "electron . --smoke",
+    "test:config": "node scripts/config-test.js",
+    "test:history": "node scripts/history-test.js",
+    "test:scheduler": "node scripts/scheduler-test.js",
+    "test:autostart": "node scripts/autostart-test.js",
     "design-check": "node scripts/design-check.js",
+    "test": "npm run test:config && npm run test:history && npm run test:scheduler && npm run test:autostart && npm run design-check",
+    "render-icon": "electron scripts/render-icon.js",
+    "capture": "electron . --capture-dir=qa",
     "pack": "electron-builder --dir",
     "dist": "electron-builder --win"
   },
@@ -19,12 +26,23 @@
   "build": {
     "appId": "com.local.inhalerreminder",
     "productName": "Inhaler Reminder",
-    "directories": { "output": "dist" },
-    "files": ["src/**/*", "assets/**/*", "package.json"],
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "src/**/*",
+      "assets/**/*",
+      "package.json"
+    ],
     "win": {
-      "target": ["portable"],
+      "target": [
+        "portable"
+      ],
       "icon": "assets/icon.png",
       "signAndEditExecutable": false
     }
+  },
+  "allowScripts": {
+    "electron@33.4.11": true
   }
 }
