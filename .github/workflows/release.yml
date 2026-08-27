@@ -1,0 +1,79 @@
+name: Release
+
+# Pushing a v* tag builds the executable and attaches it to that release, so a
+# published release always carries a binary built from the tagged commit.
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Existing tag to build and attach the executable to
+        required: true
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: windows-latest
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.inputs.tag || github.ref }}
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Cache Electron download
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/AppData/Local/electron/Cache
+            ~/AppData/Local/electron-builder/Cache
+          key: electron-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
+          restore-keys: electron-${{ runner.os }}-
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Test
+        run: npm test
+
+      - name: Smoke-test the packaged entry point
+        run: npm run smoke
+
+      - name: Build portable executable
+        run: npm run dist
+
+      # A tag that disagrees with package.json would ship a binary whose
+      # in-app version does not match its release.
+      - name: Check the tag matches package.json
+        shell: pwsh
+        run: |
+          $version = (Get-Content package.json -Raw | ConvertFrom-Json).version
+          $tag = "${{ github.event.inputs.tag || github.ref_name }}"
+          if ($tag -ne "v$version") { throw "tag $tag does not match package.json version $version" }
+          $built = "dist/Inhaler Reminder $version.exe"
+          if (-not (Test-Path $built)) { throw "expected build not found: $built" }
+          Move-Item $built "dist/InhalerReminder-$version-portable.exe"
+          "ASSET=dist/InhalerReminder-$version-portable.exe" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
+          "TAG=$tag" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
+
+      # Uses the preinstalled gh CLI rather than a third-party action, so the
+      # release step pulls in no external dependency.
+      - name: Publish the executable
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release view $env:TAG *> $null
+          if ($LASTEXITCODE -ne 0) {
+            gh release create $env:TAG --title $env:TAG --generate-notes
+            if ($LASTEXITCODE -ne 0) { throw "failed to create release $env:TAG" }
+          }
+          gh release upload $env:TAG "$env:ASSET" --clobber
+          if ($LASTEXITCODE -ne 0) { throw "failed to upload the executable" }

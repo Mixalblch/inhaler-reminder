@@ -1,0 +1,68 @@
+name: CI
+
+# Every push to main produces a downloadable .exe, so main is always known to
+# build and there is a binary to try without waiting for a release.
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    # electron-builder --win needs a Windows runner to produce the portable exe.
+    runs-on: windows-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      # The Electron binary is ~100 MB and does not change between runs.
+      - name: Cache Electron download
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/AppData/Local/electron/Cache
+            ~/AppData/Local/electron-builder/Cache
+          key: electron-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
+          restore-keys: electron-${{ runner.os }}-
+
+      - name: Install dependencies
+        run: npm ci
+
+      # Unit tests plus the design contract: locale parity, theme tokens, and
+      # design-2a geometry.
+      - name: Test
+        run: npm test
+
+      # Catches a main-process crash that unit tests cannot see.
+      - name: Smoke-test the packaged entry point
+        run: npm run smoke
+
+      - name: Build portable executable
+        run: npm run dist
+
+      - name: Give the build a clean name
+        shell: pwsh
+        run: |
+          $version = (Get-Content package.json -Raw | ConvertFrom-Json).version
+          $built = "dist/Inhaler Reminder $version.exe"
+          if (-not (Test-Path $built)) { throw "expected build not found: $built" }
+          Move-Item $built "dist/InhalerReminder-$version-portable.exe"
+          "ARTIFACT_VERSION=$version" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: InhalerReminder-${{ env.ARTIFACT_VERSION }}-portable
+          path: dist/InhalerReminder-*-portable.exe
+          retention-days: 30
+          if-no-files-found: error
