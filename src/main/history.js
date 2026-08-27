@@ -1,5 +1,6 @@
 const fs = require('fs');
 const path = require('path');
+const { atomicWrite } = require('./atomic-write');
 
 const DOSES = ['morning', 'evening'];
 const VALID_STATUSES = ['pending', 'confirmed', 'missed', 'disabled'];
@@ -68,9 +69,7 @@ function load() {
 
 function save() {
   const store = load();
-  const target = historyFilePath();
-  fs.mkdirSync(path.dirname(target), { recursive: true });
-  fs.writeFileSync(target, JSON.stringify(store, null, 2), 'utf8');
+  atomicWrite(historyFilePath(), JSON.stringify(store, null, 2));
   return store;
 }
 
@@ -134,7 +133,7 @@ function sync(config, value) {
     const win = config && config.windows && config.windows[dose];
     const entry = day && day[dose];
     if (!win || !win.enabled || !entry || entry.status !== 'pending') return;
-    const deadline = parseTime(win.end) + Number(config.graceMinutes || 0);
+    const deadline = parseTime(win.end) + (config.graceMinutes != null ? Number(config.graceMinutes) : 120);
     if (nowMinutes > deadline) {
       day[dose] = { status: 'missed', at: null, backdated: false };
       changed = true;
@@ -227,13 +226,23 @@ function summary(config, value, count) {
     days.push(item);
   }
 
+  const todayKey = localDayKey(now);
+  const todayStatus = getDay(todayKey);
+  function doseSettled(dose) {
+    const win = config && config.windows && config.windows[dose];
+    if (!win || !win.enabled) return true;
+    const entry = todayStatus[dose];
+    return !!(entry && (entry.status === 'confirmed' || entry.status === 'disabled'));
+  }
+
   return {
     days: days,
     confirmedCount: confirmedCount,
     trackedCount: trackedCount,
     latestMissed: latestMissed,
-    today: localDayKey(now),
-    todayStatus: getDay(localDayKey(now))
+    today: todayKey,
+    todayStatus: todayStatus,
+    todayComplete: doseSettled('morning') && doseSettled('evening')
   };
 }
 

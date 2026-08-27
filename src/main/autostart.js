@@ -2,7 +2,11 @@ const { app } = require('electron');
 
 function setAutostart(enabled) {
   try {
-    app.setLoginItemSettings({ openAtLogin: !!enabled });
+    app.setLoginItemSettings({
+      openAtLogin: !!enabled,
+      enabled: !!enabled,
+      args: enabled ? ['--autostart'] : []
+    });
   } catch (e) {
     console.error('setAutostart failed:', e);
   }

@@ -44,6 +44,30 @@ history.sync(config, late);
 assert.strictEqual(history.getDay('2026-08-27').evening.status, 'missed');
 assert.strictEqual(history.getDay('2026-08-27').morning.status, 'confirmed');
 
+const file2 = path.join(tempDir, 'history-complete.json');
+const morningOnly = {
+  graceMinutes: 120,
+  windows: {
+    morning: { enabled: true, start: '09:00', end: '12:00' },
+    evening: { enabled: false, start: '18:00', end: '21:00' }
+  }
+};
+history._resetForTests();
+history._setFilePathForTests(file2);
+history.sync(morningOnly, morning);
+history.confirm('2026-08-27', 'morning');
+summary = history.summary(morningOnly, morning, 14);
+assert.strictEqual(summary.todayComplete, true, 'disabled evening does not block today complete');
+assert.strictEqual(summary.todayStatus.evening.status, 'disabled');
+
+const file3 = path.join(tempDir, 'history-rollover.json');
+history._resetForTests();
+history._setFilePathForTests(file3);
+history.sync(config, new Date(2026, 7, 27, 10, 0));
+assert.strictEqual(history.getDay('2026-08-27').evening.status, 'pending');
+summary = history.summary(config, new Date(2026, 7, 28, 9, 0), 14);
+assert.strictEqual(history.getDay('2026-08-27').evening.status, 'missed', 'pending yesterday becomes missed on next-day sync');
+
 history._resetForTests();
 fs.rmSync(tempDir, { recursive: true, force: true });
 console.log('HISTORY_TEST_OK');

@@ -63,6 +63,9 @@ module.exports = {
   'notif.snooze': 'Позже',
   'notif.doneAt': 'Отмечено в {time}',
   'notif.nextTomorrow': 'Следующее напоминание — завтра в {time}',
+  'notif.nextToday': 'Следующее напоминание — сегодня в {time}',
+  'notif.snoozeMin': '{minutes} мин',
+  'notif.snoozeHour': '1 час',
   'notif.snoozedFor': 'Вернусь через {minutes} мин',
   'notif.windowWillClose': 'Окно закроется само. Приём можно отметить и позже.',
 
