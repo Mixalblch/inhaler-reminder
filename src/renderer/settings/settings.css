@@ -36,10 +36,8 @@ button:focus-visible,input:focus-visible,select:focus-visible { outline:2px soli
 .history-dot.disabled { opacity:.3; }
 .day-track { position:relative; height:7px; margin:14px 0 12px; overflow:hidden; border-radius:999px; background:var(--surface-muted); }
 .track-window { position:absolute; inset-block:0; border-radius:999px; } .track-window.morning { left:37.5%; width:12.5%; background:var(--accent); } .track-window.evening { left:75%; width:12.5%; background:var(--evening); }
-.track-now { position:absolute; z-index:1; top:-2px; bottom:-2px; left:58%; width:9px; border:2px solid var(--bg); border-radius:50%; background:var(--text); }
+.track-now { position:absolute; top:-2px; bottom:-2px; left:58%; width:9px; border:2px solid var(--bg); border-radius:50%; background:var(--text); }
 .missed-card { display:grid; grid-template-columns:16px minmax(0,1fr) auto; align-items:center; gap:9px; min-height:58px; padding:9px 10px; background:var(--warning-bg); border:1px solid var(--warning-line); border-radius:11px; }
-.missed-actions { display:flex; align-items:center; gap:6px; }
-.missed-actions .compact-button { min-width:64px; }
 .missed-card[hidden] { display:none; } .missed-ring { width:14px; height:14px; border:1.5px dashed #c79f58; border-radius:50%; }
 .missed-copy { display:flex; flex-direction:column; gap:2px; min-width:0; } .missed-copy strong { font-size:12px; font-weight:680; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; } .missed-copy span { color:var(--tertiary); font-size:10px; }
 .compact-button { min-width:78px; height:31px; padding:0 12px; border:1px solid var(--line); border-radius:9px; background:var(--surface-solid); box-shadow:0 1px 3px rgba(28,28,30,.08); font-size:11px; font-weight:650; cursor:pointer; }

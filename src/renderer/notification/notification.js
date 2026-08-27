@@ -44,34 +44,6 @@
     text('notif-title', t('notif.title')); text('notif-body', t('notif.body'));
     text('confirm', t('notif.confirm')); text('snooze', t('notif.snooze')); text('undo', t('history.undo'));
     document.getElementById('doseDot').classList.toggle('morning', morning);
-    sheet.querySelectorAll('[data-snooze]').forEach(function (button) {
-      var minutes = Number(button.dataset.snooze);
-      button.textContent = minutes === 60 ? t('notif.snoozeHour') : t('notif.snoozeMin').replace('{minutes}', String(minutes));
-    });
-  }
-  function outstanding(dose) {
-    var windows = payload.windows || {};
-    var win = windows[dose];
-    if (!win || win.enabled === false) return false;
-    var entry = payload.todayStatus && payload.todayStatus[dose];
-    var status = entry && entry.status ? entry.status : 'pending';
-    return status === 'pending' || status === 'fired' || status === 'snoozed';
-  }
-  function nextReminderLine(confirmedDose) {
-    var windows = payload.windows || {};
-    if (confirmedDose === 'morning' && outstanding('evening')) {
-      return t('notif.nextToday').replace('{time}', windows.evening.start);
-    }
-    if (outstanding('morning') && confirmedDose !== 'morning') {
-      return t('notif.nextTomorrow').replace('{time}', windows.morning.start);
-    }
-    if (windows.morning && windows.morning.enabled !== false) {
-      return t('notif.nextTomorrow').replace('{time}', windows.morning.start);
-    }
-    if (windows.evening && windows.evening.enabled !== false) {
-      return t('notif.nextTomorrow').replace('{time}', windows.evening.start);
-    }
-    return t('today.complete');
   }
   function onNotification(nextPayload) {
     if (!nextPayload) return; clearTimers(); card.classList.remove('is-leaving','is-visible'); void card.offsetWidth; card.classList.add('is-visible'); render(nextPayload);
@@ -80,10 +52,9 @@
   }
   confirmBtn.addEventListener('click', function () {
     clearTimers(); window.api.confirmInhalation().then(function (dose) {
-      if (!dose) return;
-      confirmedDose = dose;
+      confirmedDose = dose || payload.windowKey;
       var time = new Date().toLocaleTimeString(document.documentElement.lang || 'ru', { hour:'2-digit', minute:'2-digit' });
-      showResult(t('notif.doneAt').replace('{time}', time), nextReminderLine(dose), true);
+      showResult(t('notif.doneAt').replace('{time}', time), t('notif.nextTomorrow').replace('{time}', payload.windowKey === 'morning' ? payload.end : '09:00'), true);
       hideSoon(4500);
     });
   });
@@ -92,12 +63,7 @@
     button.addEventListener('click', function () { var minutes=Number(button.dataset.snooze); clearTimers(); window.api.snooze(minutes); showResult(t('notif.snoozedFor').replace('{minutes}', minutes), t('notif.windowWillClose'), false); hideSoon(900); });
   });
   document.getElementById('undo').addEventListener('click', function () {
-    clearTimers(); window.api.undoInhalation(confirmedDose).then(function (ok) {
-      if (!ok) return;
-      confirmedDose = null;
-      showIdle();
-      autoTimer = setTimeout(function () { window.api.snooze(payload.snoozeMinutes); hideSoon(0); }, 5 * 60 * 1000);
-    });
+    clearTimers(); window.api.undoInhalation(confirmedDose).then(function (ok) { if (ok) { confirmedDose=null; showIdle(); } });
   });
   if (window.api && typeof window.api.onNotification === 'function') window.api.onNotification(onNotification);
 })();

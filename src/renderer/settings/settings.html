@@ -31,9 +31,9 @@
           </div>
         </div>
         <div class="day-track" aria-hidden="true">
-          <span class="track-window morning" id="morningTrack"></span>
-          <span class="track-now" id="trackNow"></span>
-          <span class="track-window evening" id="eveningTrack"></span>
+          <span class="track-window morning"></span>
+          <span class="track-now"></span>
+          <span class="track-window evening"></span>
         </div>
         <div class="missed-card" id="missedCard" hidden>
           <span class="missed-ring" aria-hidden="true"></span>
@@ -41,10 +41,7 @@
             <strong id="missedTitle"></strong>
             <span id="missedDescription"></span>
           </div>
-          <div class="missed-actions">
-            <button type="button" class="compact-button" id="backdateUndoBtn" hidden></button>
-            <button type="button" class="compact-button" id="backdateBtn"></button>
-          </div>
+          <button type="button" class="compact-button" id="backdateBtn"></button>
         </div>
         <div class="history-heading">
           <span data-i18n="history.title">Последние 14 дней</span>
@@ -97,7 +94,7 @@
         <h2 class="section-title" id="notificationTitle" data-i18n="settings.notifications">Напоминания</h2>
         <div class="settings-card numeric-card">
           <div class="setting-row"><label for="snooze" data-i18n="settings.snoozeShort">Отложить на</label><div class="stepper compact"><button type="button" data-number-step="-5" data-target="snooze" aria-label="Уменьшить">−</button><input type="number" id="snooze" min="1" max="180" step="5" /><span class="unit" data-i18n="units.minutes">мин</span><button type="button" data-number-step="5" data-target="snooze" aria-label="Увеличить">+</button></div></div>
-          <div class="setting-row"><label for="grace" data-i18n="settings.graceShort">Догонять в течение</label><div class="stepper compact"><button type="button" data-number-step="-15" data-target="grace" aria-label="Уменьшить">−</button><input class="visually-hidden-number" type="number" id="grace" min="0" max="360" step="15" tabindex="-1" /><span class="formatted-value" id="graceValue"></span><button type="button" data-number-step="15" data-target="grace" aria-label="Увеличить">+</button></div></div>
+          <div class="setting-row"><label for="grace" data-i18n="settings.graceShort">Догонять в течение</label><div class="stepper compact"><button type="button" data-number-step="-15" data-target="grace" aria-label="Уменьшить">−</button><input class="visually-hidden-number" type="number" id="grace" min="0" max="360" step="15" /><span class="formatted-value" id="graceValue"></span><button type="button" data-number-step="15" data-target="grace" aria-label="Увеличить">+</button></div></div>
         </div>
         <p class="section-note" data-i18n="settings.graceHint"></p>
       </section>

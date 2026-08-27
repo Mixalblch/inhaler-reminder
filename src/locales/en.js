@@ -63,9 +63,6 @@ module.exports = {
   'notif.snooze': 'Later',
   'notif.doneAt': 'Marked at {time}',
   'notif.nextTomorrow': 'Next reminder — tomorrow at {time}',
-  'notif.nextToday': 'Next reminder — today at {time}',
-  'notif.snoozeMin': '{minutes} min',
-  'notif.snoozeHour': '1 h',
   'notif.snoozedFor': 'Back in {minutes} min',
   'notif.windowWillClose': 'This window will close automatically. You can mark the dose later.',
 

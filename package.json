@@ -9,9 +9,7 @@
     "smoke": "electron . --smoke",
     "design-check": "node scripts/design-check.js",
     "test:history": "node scripts/history-test.js",
-    "test:scheduler": "node scripts/scheduler-test.js",
-    "test:config": "node scripts/config-test.js",
-    "test": "npm run test:history && npm run test:scheduler && npm run test:config && npm run design-check",
+    "test": "npm run test:history && npm run design-check",
     "render-icon": "electron scripts/render-icon.js",
     "pack": "electron-builder --dir",
     "dist": "electron-builder --win"

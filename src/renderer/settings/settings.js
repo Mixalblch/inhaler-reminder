@@ -95,7 +95,7 @@
     var morning = historySummary.todayStatus.morning || { status: config.windows.morning.enabled ? 'pending' : 'disabled' };
     var evening = historySummary.todayStatus.evening || { status: config.windows.evening.enabled ? 'pending' : 'disabled' };
     var ms = statusClass(morning); var es = statusClass(evening); var headline; var description;
-    if (historySummary.todayComplete) { headline = t('today.complete'); description = t('today.completeDescription'); }
+    if (ms === 'confirmed' && es === 'confirmed') { headline = t('today.complete'); description = t('today.completeDescription'); }
     else if (ms === 'confirmed' && es === 'pending') { headline = t('today.eveningRemaining'); description = t('today.reminderWindow').replace('{start}', config.windows.evening.start).replace('{end}', config.windows.evening.end); }
     else if (ms === 'pending') { headline = t('today.morningRemaining'); description = t('today.reminderWindow').replace('{start}', config.windows.morning.start).replace('{end}', config.windows.morning.end); }
     else if (es === 'pending') { headline = t('today.eveningRemaining'); description = t('today.reminderWindow').replace('{start}', config.windows.evening.start).replace('{end}', config.windows.evening.end); }
@@ -107,60 +107,21 @@
     el('historyScore').textContent = historySummary.trackedCount ? (historySummary.confirmedCount + ' ' + t('history.of') + ' ' + historySummary.trackedCount) : t('history.noData');
     var days = historySummary.days;
     el('historyStartDate').textContent = shortDate(days[0].date); el('historyMiddleDate').textContent = parseDay(days[6].date).getDate(); el('historyEndDate').textContent = shortDate(days[days.length - 1].date);
-    renderDayTrack();
     renderMissedCard();
   }
-  function setTrackWindow(node, start, end, enabled) {
-    if (!node) return;
-    if (!enabled) { node.style.display = 'none'; return; }
-    var startMin = toMinutes(start); var endMin = toMinutes(end);
-    node.style.display = 'block';
-    node.style.left = (startMin / 1440 * 100) + '%';
-    node.style.width = (Math.max(15, endMin - startMin) / 1440 * 100) + '%';
-  }
-  function renderDayTrack() {
-    if (!config) return;
-    setTrackWindow(el('morningTrack'), config.windows.morning.start, config.windows.morning.end, config.windows.morning.enabled);
-    setTrackWindow(el('eveningTrack'), config.windows.evening.start, config.windows.evening.end, config.windows.evening.enabled);
-    var nowMin = new Date().getHours() * 60 + new Date().getMinutes();
-    var marker = el('trackNow');
-    if (marker) marker.style.left = (nowMin / 1440 * 100) + '%';
-  }
   function renderMissedCard() {
-    var card = el('missedCard');
-    var missed = historySummary.latestMissed;
-    var undoBtn = el('backdateUndoBtn');
-    var markBtn = el('backdateBtn');
-    if (!missed && !backdateUndoTarget) { card.hidden = true; return; }
+    var card = el('missedCard'); var target = backdateUndoTarget || historySummary.latestMissed;
+    if (!target) { card.hidden = true; return; }
     card.hidden = false;
-    undoBtn.hidden = !backdateUndoTarget;
-    undoBtn.textContent = t('history.undo');
-    if (missed) {
-      el('missedTitle').textContent = t('settings.' + missed.dose) + ', ' + longDate(missed.date) + ' — ' + t('history.missed');
-      el('missedDescription').textContent = t('history.missedDescription');
-      markBtn.hidden = false;
-      markBtn.textContent = t('history.mark');
+    if (backdateUndoTarget) {
+      el('missedTitle').textContent = t('history.backdatedTitle'); el('missedDescription').textContent = t('history.backdatedDescription'); el('backdateBtn').textContent = t('history.undo');
     } else {
-      el('missedTitle').textContent = t('history.backdatedTitle');
-      el('missedDescription').textContent = t('history.backdatedDescription');
-      markBtn.hidden = true;
+      el('missedTitle').textContent = t('settings.' + target.dose) + ', ' + longDate(target.date) + ' — ' + t('history.missed');
+      el('missedDescription').textContent = t('history.missedDescription'); el('backdateBtn').textContent = t('history.mark');
     }
   }
-  function toMinutes(value) { var parts = String(value || '00:00').split(':'); return Number(parts[0]) * 60 + Number(parts[1]); }
-  function fromMinutes(value) {
-    var total = Math.max(0, Math.min(23 * 60 + 59, value));
-    return String(Math.floor(total / 60)).padStart(2, '0') + ':' + String(total % 60).padStart(2, '0');
-  }
-  function clampWindowValue(targetId, value) {
-    var dose = targetId.indexOf('morning') === 0 ? 'morning' : 'evening';
-    var field = targetId.indexOf('Start') !== -1 ? 'start' : 'end';
-    var otherId = dose + (field === 'start' ? 'End' : 'Start');
-    var minutes = toMinutes(value);
-    var other = toMinutes(controls[otherId].value);
-    if (field === 'start' && minutes >= other) minutes = other - 15;
-    if (field === 'end' && minutes <= other) minutes = other + 15;
-    return fromMinutes(minutes);
-  }
+  function toMinutes(value) { var parts = value.split(':'); return Number(parts[0]) * 60 + Number(parts[1]); }
+  function fromMinutes(value) { var total = (value % 1440 + 1440) % 1440; return String(Math.floor(total / 60)).padStart(2, '0') + ':' + String(total % 60).padStart(2, '0'); }
   function windowPatchFor(target, value) {
     var dose = target.indexOf('morning') === 0 ? 'morning' : 'evening'; var field = target.indexOf('Start') !== -1 ? 'start' : 'end'; var patch = { windows: {} };
     patch.windows[dose] = {}; patch.windows[dose][field] = value; return patch;
@@ -168,8 +129,8 @@
   function bindEvents() {
     controls.morningEnabled.addEventListener('change', function () { saveConfig({ windows: { morning: { enabled: controls.morningEnabled.checked } } }); });
     controls.eveningEnabled.addEventListener('change', function () { saveConfig({ windows: { evening: { enabled: controls.eveningEnabled.checked } } }); });
-    ['morningStart','morningEnd','eveningStart','eveningEnd'].forEach(function (id) { controls[id].addEventListener('change', function () { if (!controls[id].value) return; var value = clampWindowValue(id, controls[id].value); controls[id].value = value; saveConfig(windowPatchFor(id, value)); }); });
-    document.querySelectorAll('[data-time-step]').forEach(function (button) { button.addEventListener('click', function () { var target = controls[button.dataset.target]; var value = clampWindowValue(button.dataset.target, fromMinutes(toMinutes(target.value) + Number(button.dataset.timeStep))); target.value = value; saveConfig(windowPatchFor(button.dataset.target, value)); }); });
+    ['morningStart','morningEnd','eveningStart','eveningEnd'].forEach(function (id) { controls[id].addEventListener('change', function () { if (controls[id].value) saveConfig(windowPatchFor(id, controls[id].value)); }); });
+    document.querySelectorAll('[data-time-step]').forEach(function (button) { button.addEventListener('click', function () { var target = controls[button.dataset.target]; var value = fromMinutes(toMinutes(target.value) + Number(button.dataset.timeStep)); target.value = value; saveConfig(windowPatchFor(button.dataset.target, value)); }); });
     document.querySelectorAll('.dose-summary').forEach(function (button) { button.addEventListener('click', function () { var editor = el(button.dataset.editor); var open = button.getAttribute('aria-expanded') === 'true'; button.setAttribute('aria-expanded', String(!open)); editor.hidden = open; }); });
     document.querySelectorAll('[data-number-step]').forEach(function (button) { button.addEventListener('click', function () { var target = controls[button.dataset.target]; var next = Math.min(Number(target.max), Math.max(Number(target.min), Number(target.value) + Number(button.dataset.numberStep))); target.value = String(next); var patch = {}; patch[button.dataset.target === 'snooze' ? 'snoozeMinutes' : 'graceMinutes'] = next; saveConfig(patch); }); });
     controls.snooze.addEventListener('change', function () { saveConfig({ snoozeMinutes: Number(controls.snooze.value) }); });
@@ -181,22 +142,9 @@
     controls.quitBtn.addEventListener('click', function () { window.api.quit(); });
     document.querySelectorAll('[data-appearance]').forEach(function (button) { button.addEventListener('click', function () { saveConfig({ appearance: button.dataset.appearance }); }); });
     el('backdateBtn').addEventListener('click', function () {
-      var target = historySummary.latestMissed; if (!target) return;
-      window.api.backdateDose(target.date, target.dose).then(function (result) {
-        if (!result || !result.ok) return;
-        historySummary = result.summary;
-        backdateUndoTarget = target;
-        renderToday();
-      });
-    });
-    el('backdateUndoBtn').addEventListener('click', function () {
-      var target = backdateUndoTarget; if (!target) return;
-      window.api.undoBackdate(target.date, target.dose).then(function (result) {
-        if (!result || !result.ok) return;
-        historySummary = result.summary;
-        backdateUndoTarget = null;
-        renderToday();
-      });
+      var target = backdateUndoTarget || historySummary.latestMissed; if (!target) return;
+      var action = backdateUndoTarget ? window.api.undoBackdate(target.date, target.dose) : window.api.backdateDose(target.date, target.dose);
+      action.then(function (result) { if (!result || !result.ok) return; historySummary = result.summary; backdateUndoTarget = backdateUndoTarget ? null : target; renderToday(); });
     });
     window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', function () { if (config && config.appearance === 'system') applyTheme(); });
   }
@@ -210,7 +158,6 @@
       STR = await window.api.getStrings(); config = await window.api.getConfig(); historySummary = await window.api.getHistorySummary();
       window.api.onConfigChanged(handleConfigChanged); window.api.onHistoryChanged(function (summary) { historySummary = summary; renderToday(); });
       renderTexts(); renderControls(); renderToday(); bindEvents();
-      setInterval(renderDayTrack, 30000);
     } catch (error) { console.error('Failed to initialise settings page', error); }
   }
   init();

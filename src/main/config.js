@@ -1,6 +1,6 @@
+const { app } = require('electron');
 const fs = require('fs');
 const path = require('path');
-const { atomicWrite } = require('./atomic-write');
 
 const DEFAULTS = {
   version: 1,
@@ -10,7 +10,7 @@ const DEFAULTS = {
   appearance: 'system',
   snoozeMinutes: 15,
   graceMinutes: 120,
-  idleThresholdSeconds: 300,
+  idleThresholdSeconds: 30,
   windows: {
     morning: { enabled: true, start: '09:00', end: '12:00' },
     evening: { enabled: true, start: '18:00', end: '21:00' }
@@ -22,7 +22,6 @@ let cached = null;
 
 function configFilePath() {
   if (!configPath) {
-    const { app } = require('electron');
     configPath = path.join(app.getPath('userData'), 'config.json');
   }
   return configPath;
@@ -42,30 +41,13 @@ function isValidTime(s) {
   return Number.isInteger(h) && Number.isInteger(m) && h >= 0 && h <= 23 && m >= 0 && m <= 59;
 }
 
-function minutesOf(s) {
-  return Number(s.slice(0, 2)) * 60 + Number(s.slice(3, 5));
-}
-
 function normalizeWindow(w, def) {
   const src = (w && typeof w === 'object') ? w : {};
-  let start = isValidTime(src.start) ? src.start : def.start;
-  let end = isValidTime(src.end) ? src.end : def.end;
-  if (minutesOf(start) >= minutesOf(end)) {
-    start = def.start;
-    end = def.end;
-  }
   return {
     enabled: typeof src.enabled === 'boolean' ? src.enabled : def.enabled,
-    start: start,
-    end: end
+    start: isValidTime(src.start) ? src.start : def.start,
+    end: isValidTime(src.end) ? src.end : def.end
   };
-}
-
-function normalizeIdle(value) {
-  if (value == null || value === '') return DEFAULTS.idleThresholdSeconds;
-  const n = clampInt(value, 5, 600, DEFAULTS.idleThresholdSeconds);
-  if (n < 60) return DEFAULTS.idleThresholdSeconds;
-  return n;
 }
 
 function normalize(input) {
@@ -79,7 +61,7 @@ function normalize(input) {
     appearance: (input.appearance === 'light' || input.appearance === 'dark') ? input.appearance : 'system',
     snoozeMinutes: clampInt(input.snoozeMinutes, 1, 180, DEFAULTS.snoozeMinutes),
     graceMinutes: clampInt(input.graceMinutes, 0, 360, DEFAULTS.graceMinutes),
-    idleThresholdSeconds: normalizeIdle(input.idleThresholdSeconds),
+    idleThresholdSeconds: clampInt(input.idleThresholdSeconds, 5, 600, DEFAULTS.idleThresholdSeconds),
     windows: {
       morning: normalizeWindow(w.morning, DEFAULTS.windows.morning),
       evening: normalizeWindow(w.evening, DEFAULTS.windows.evening)
@@ -100,7 +82,8 @@ function load() {
 
 function save() {
   const cfg = load();
-  atomicWrite(configFilePath(), JSON.stringify(cfg, null, 2));
+  fs.mkdirSync(path.dirname(configFilePath()), { recursive: true });
+  fs.writeFileSync(configFilePath(), JSON.stringify(cfg, null, 2), 'utf8');
   return cfg;
 }
 
@@ -122,22 +105,4 @@ function set(patch) {
   return cached;
 }
 
-function setFilePathForTests(target) {
-  configPath = target;
-  cached = null;
-}
-
-function resetForTests() {
-  cached = null;
-  configPath = null;
-}
-
-module.exports = {
-  get: get,
-  set: set,
-  save: save,
-  normalize: normalize,
-  DEFAULTS: DEFAULTS,
-  _setFilePathForTests: setFilePathForTests,
-  _resetForTests: resetForTests
-};
+module.exports = { get, set, save, DEFAULTS };
