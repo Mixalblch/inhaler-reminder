@@ -73,6 +73,10 @@ npm start
 | `npm run capture` | Снять QA-снимки и отчёт о взаимодействиях в `qa/` |
 | `npm run render-icon` | Перегенерировать иконки из `assets/icon-source.svg` |
 
+Каждый пуш в `main`, прошедший проверки, поднимает patch-версию, собирает `.exe` и публикует новый релиз. Чтобы прогнать проверки без публикации, добавьте `[no release]` в сообщение коммита. Pull request собирается так же, но ничего не публикует.
+
+> После публикации бот дописывает в `main` коммит с новой версией, поэтому перед следующим пушем сделайте `git pull`.
+
 Интерфейс реализует направление Claude Design `2a — Дыхание`; подробности решений и правила проверки — в [DESIGN.md](DESIGN.md).
 
 ### Оговорка
@@ -134,7 +138,11 @@ npm start
 | `npm run capture` | Write QA screenshots and an interaction report to `qa/` |
 | `npm run render-icon` | Regenerate the icons from `assets/icon-source.svg` |
 
-Every push to `main` runs the tests and builds the executable; a `v*` tag publishes it to a release. The interface implements Claude Design direction `2a — Дыхание` — see [DESIGN.md](DESIGN.md) for the decisions and the checks that hold them in place.
+Every push to `main` that passes the checks bumps the patch version, builds the executable, and publishes a release. Put `[no release]` in a commit message to run the checks without publishing. Pull requests build the same way and publish nothing.
+
+> Publishing commits the new version back to `main`, so `git pull` before your next push.
+
+The interface implements Claude Design direction `2a — Дыхание` — see [DESIGN.md](DESIGN.md) for the decisions and the checks that hold them in place.
 
 ### Disclaimer
 
