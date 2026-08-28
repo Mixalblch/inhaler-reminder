@@ -1,87 +1,47 @@
-// Inhaler Reminder — always-on-top reminder window.
+// Inhaler Reminder — always-on-top notification popup.
 // Vanilla JS only. Talks to the main process exclusively through window.api.
 
 (function () {
   'use strict';
 
-  var AUTO_SNOOZE_MS = 5 * 60 * 1000;   // untouched reminders defer themselves
-  var RESULT_MS = 4500;                 // how long the confirmation stays up
-  var LEAVE_MS = 200;
+  var AUTO_SNOOZE_MS = 5 * 60 * 1000;   // 'dose' reminders defer themselves
+  var AUTO_HIDE_MS = 20 * 1000;         // 'low' warnings close themselves
+  var LEAVE_MS = 200;                   // exit-animation duration
 
   var STR = {};
   var payload = null;
-  var confirmedDose = null;
   var autoTimer = null;
-  var hideTimer = null;
   var leaveTimer = null;
 
   var card = document.getElementById('card');
-  var idleView = document.getElementById('idleView');
-  var resultView = document.getElementById('resultView');
-  var sheet = document.getElementById('snoozeSheet');
+  var doseMeta = document.getElementById('doseMeta');
+  var confirmBtn = document.getElementById('confirmBtn');
   var snoozeBtn = document.getElementById('snoozeBtn');
+  var okBtn = document.getElementById('okBtn');
+  var nextLine = document.getElementById('nextLine');
 
-  function t(key) { return STR[key] || key; }
+  function t(k) { return STR[k] || k; }
   function text(id, value) { document.getElementById(id).textContent = value; }
-  function fill(template, values) {
-    return String(template).replace(/\{(\w+)\}/g, function (match, name) {
-      return Object.prototype.hasOwnProperty.call(values, name) ? values[name] : match;
-    });
+  function replace(template, name, value) {
+    return String(template).replace('{' + name + '}', String(value));
   }
 
   function clearTimers() {
     clearTimeout(autoTimer);
-    clearTimeout(hideTimer);
     clearTimeout(leaveTimer);
   }
 
-  function formatDuration(minutes) {
-    var value = Math.max(0, Number(minutes) || 0);
-    if (value < 60) return value + ' ' + t('units.minutes');
-    var hours = Math.floor(value / 60);
-    var rest = value % 60;
-    if (rest === 0) return hours + ' ' + t('units.hours');
-    return hours + ' ' + t('units.hours') + ' ' + rest + ' ' + t('units.minutes');
-  }
-
-  // The snooze buttons carry the long form ("1 час"); a stepper readout would
-  // be too cramped for it, so it is not used by formatDuration.
-  function snoozeChoiceLabel(minutes) {
-    return minutes === 60 ? t('units.oneHour') : formatDuration(minutes);
+  // Plays the exit animation, then runs the action (which hides or snoozes).
+  function fadeOut(action) {
+    card.classList.add('is-leaving');
+    clearTimeout(leaveTimer);
+    leaveTimer = setTimeout(action, LEAVE_MS);
   }
 
   function applyTheme(appearance) {
     var dark = appearance === 'dark' ||
       (appearance === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
     document.documentElement.dataset.theme = dark ? 'dark' : 'light';
-  }
-
-  function closeSheet() {
-    sheet.hidden = true;
-    snoozeBtn.setAttribute('aria-expanded', 'false');
-  }
-
-  function showIdle() {
-    idleView.hidden = false;
-    idleView.classList.remove('snoozed');
-    resultView.hidden = true;
-    closeSheet();
-  }
-
-  function showResult(title, subtitle, undoVisible) {
-    idleView.hidden = true;
-    resultView.hidden = false;
-    text('resultTitle', title);
-    text('resultSubtitle', subtitle);
-    document.getElementById('undoBtn').hidden = !undoVisible;
-  }
-
-  function hideSoon(delay) {
-    clearTimeout(hideTimer);
-    hideTimer = setTimeout(function () {
-      card.classList.add('is-leaving');
-      leaveTimer = setTimeout(function () { window.api.hideNotification(); }, LEAVE_MS);
-    }, delay);
   }
 
   function playChime() {
@@ -107,99 +67,96 @@
     } catch (error) { /* sound is optional */ }
   }
 
-  function render(next) {
-    payload = next;
-    STR = payload.strings || {};
-    confirmedDose = null;
-    document.documentElement.lang = payload.locale === 'en' ? 'en' : 'ru';
-    applyTheme(payload.appearance || 'system');
-    showIdle();
+  function nextReminderText(next) {
+    if (!next) return t('notif.noNext');
+    var key = next.day === 'today' ? 'notif.nextToday' : 'notif.nextTomorrow';
+    return replace(t(key), 'time', next.time);
+  }
 
-    var morning = payload.windowKey === 'morning';
-    text('doseChip', morning ? t('notif.morning') : t('notif.evening'));
-    text('doseWindow', payload.start + ' — ' + payload.end);
+  function renderDose(next) {
+    var chip = next.windowName
+      ? next.windowName
+      : replace(t('notif.unnamed'), 'n', next.windowIndex);
+    var snoozeMinutes = Number(next.snoozeMinutes) > 0 ? Number(next.snoozeMinutes) : 15;
+
+    doseMeta.hidden = false;
+    nextLine.hidden = false;
+    confirmBtn.hidden = false;
+    snoozeBtn.hidden = false;
+    okBtn.hidden = true;
+
+    text('doseChip', chip);
+    text('doseBadge', replace(t('notif.dosesLeft'), 'n', next.remaining));
     text('notifTitle', t('notif.title'));
     text('notifBody', t('notif.body'));
     text('confirmBtn', t('notif.confirm'));
     text('snoozeBtn', t('notif.snooze'));
-    text('undoBtn', t('history.undo'));
+    text('nextLine', nextReminderText(next.nextReminder));
 
-    sheet.querySelectorAll('[data-snooze]').forEach(function (button) {
-      button.textContent = snoozeChoiceLabel(Number(button.dataset.snooze));
-    });
+    autoTimer = setTimeout(function () {
+      fadeOut(function () { window.api.snooze(snoozeMinutes); });
+    }, AUTO_SNOOZE_MS);
+  }
+
+  function renderLow(next) {
+    doseMeta.hidden = true;
+    nextLine.hidden = true;
+    confirmBtn.hidden = true;
+    snoozeBtn.hidden = true;
+    okBtn.hidden = false;
+
+    if (next.remaining === 0) {
+      text('notifTitle', t('notif.emptyTitle'));
+      text('notifBody', t('notif.emptyBody'));
+    } else {
+      text('notifTitle', t('notif.lowTitle'));
+      text('notifBody', replace(t('notif.lowBody'), 'n', next.remaining));
+    }
+    text('okBtn', t('notif.ok'));
+
+    autoTimer = setTimeout(function () {
+      fadeOut(function () { window.api.hideNotification(); });
+    }, AUTO_HIDE_MS);
   }
 
   function onNotification(next) {
     if (!next) return;
     clearTimers();
+    payload = next;
+    STR = next.strings || {};
+    document.documentElement.lang = next.locale || 'ru';
+    applyTheme(next.appearance || 'system');
+
     card.classList.remove('is-leaving', 'is-visible');
     void card.offsetWidth;              // restart the entry animation
     card.classList.add('is-visible');
-    render(next);
-    if (payload.soundEnabled) playChime();
 
-    autoTimer = setTimeout(function () {
-      window.api.snooze(payload.snoozeMinutes);
-      hideSoon(0);
-    }, AUTO_SNOOZE_MS);
+    if (next.kind === 'low') {
+      renderLow(next);
+    } else {
+      renderDose(next);
+    }
+
+    if (next.soundEnabled) playChime();
   }
 
-  function nextReminderText() {
-    var next = payload && payload.nextReminder;
-    if (!next) return t('notif.noNext');
-    return fill(t(next.day === 'today' ? 'notif.nextToday' : 'notif.nextTomorrow'), { time: next.time });
-  }
-
-  document.getElementById('confirmBtn').addEventListener('click', function () {
+  confirmBtn.addEventListener('click', function () {
     clearTimers();
-    window.api.confirmInhalation().then(function (dose) {
-      confirmedDose = dose || payload.windowKey;
-      var now = new Date().toLocaleTimeString(document.documentElement.lang, { hour: '2-digit', minute: '2-digit' });
-      showResult(fill(t('notif.doneAt'), { time: now }), nextReminderText(), true);
-      hideSoon(RESULT_MS);
-    });
+    window.api.confirmInhalation().catch(function () { /* window may be closing */ });
   });
 
   snoozeBtn.addEventListener('click', function () {
-    var open = sheet.hidden;
-    sheet.hidden = !open;
-    snoozeBtn.setAttribute('aria-expanded', String(open));
-  });
-
-  sheet.querySelectorAll('[data-snooze]').forEach(function (button) {
-    button.addEventListener('click', function () {
-      clearTimers();
-      var requested = Number(button.dataset.snooze);
-      window.api.snooze(requested).then(function (granted) {
-        // The main process may shorten a snooze so it cannot outlive the
-        // catch-up deadline — report what was actually granted.
-        var minutes = Number(granted) > 0 ? Number(granted) : requested;
-        showResult(
-          fill(t('notif.snoozedFor'), { duration: formatDuration(minutes) }),
-          t('notif.windowWillClose'),
-          false
-        );
-        hideSoon(1600);
-      });
-    });
-  });
-
-  document.getElementById('undoBtn').addEventListener('click', function () {
     clearTimers();
-    window.api.undoInhalation(confirmedDose).then(function (ok) {
-      if (!ok) { hideSoon(0); return; }
-      confirmedDose = null;
-      showIdle();
-      // Undo puts the reminder back in play, so the auto-defer clock restarts.
-      autoTimer = setTimeout(function () {
-        window.api.snooze(payload.snoozeMinutes);
-        hideSoon(0);
-      }, AUTO_SNOOZE_MS);
-    });
+    var minutes = payload && Number(payload.snoozeMinutes) > 0 ? Number(payload.snoozeMinutes) : 15;
+    fadeOut(function () { window.api.snooze(minutes); });
   });
 
-  // On "System", the OS can flip while the reminder is on screen; without this
-  // the window keeps whatever theme it opened with.
+  okBtn.addEventListener('click', function () {
+    clearTimers();
+    fadeOut(function () { window.api.hideNotification(); });
+  });
+
+  // On "System", the OS can flip while the reminder is on screen.
   window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', function () {
     if (payload && (payload.appearance || 'system') === 'system') applyTheme('system');
   });

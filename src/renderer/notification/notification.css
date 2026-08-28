@@ -13,15 +13,12 @@
   --accent-text: #ffffff;
 
   --dose: #5b62d6;
-  --snoozed: #e9a23b;
-  --snoozed-text: #b57a1e;
+  --badge-bg: rgba(91, 98, 214, .12);
 
   --ornament: rgba(18, 165, 148, .10);
 
   --line: rgba(60, 60, 67, .16);
   --line-strong: rgba(60, 60, 67, .18);
-  --sheet-button: #ffffff;
-  --sheet-button-hover: #f7f7f5;
   --secondary-bg: rgba(255, 255, 255, .7);
   --secondary-hover: #f2f2f0;
 
@@ -40,15 +37,12 @@ html[data-theme="dark"] {
   --accent-text: #07211e;
 
   --dose: #8b90ec;
-  --snoozed: #f0b054;
-  --snoozed-text: #f0b054;
+  --badge-bg: rgba(139, 144, 236, .18);
 
   --ornament: rgba(47, 211, 188, .13);
 
   --line: rgba(255, 255, 255, .16);
   --line-strong: rgba(255, 255, 255, .18);
-  --sheet-button: #2c2c2e;
-  --sheet-button-hover: #3a3a3c;
   --secondary-bg: rgba(255, 255, 255, .06);
   --secondary-hover: #2c2c2e;
 }
@@ -93,9 +87,13 @@ button:focus-visible {
   outline-offset: 2px;
 }
 
+[hidden] { display: none !important; }
+
 .card {
   position: absolute;
   inset: 0;
+  display: flex;
+  flex-direction: column;
   overflow: hidden;
   border: 1px solid var(--surface-edge);
   border-radius: 20px;
@@ -123,17 +121,7 @@ button:focus-visible {
   pointer-events: none;
 }
 
-/* ---------- idle ---------- */
-
-.idle-view {
-  position: relative;
-  z-index: 1;
-  display: flex;
-  flex-direction: column;
-  height: 100%;
-}
-
-.idle-view[hidden] { display: none; }
+/* ---------- copy ---------- */
 
 .copy {
   padding: 20px 22px 0;
@@ -155,6 +143,11 @@ button:focus-visible {
 }
 
 .chip {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
   color: var(--dose);
   font-size: 11px;
   font-weight: 700;
@@ -162,15 +155,18 @@ button:focus-visible {
   text-transform: uppercase;
 }
 
-.dose-window {
-  color: var(--faint);
+.badge {
+  flex: none;
+  margin-left: auto;
+  padding: 3px 9px;
+  border-radius: 999px;
+  background: var(--badge-bg);
+  color: var(--dose);
   font-size: 11px;
+  font-weight: 600;
   font-variant-numeric: tabular-nums;
+  white-space: nowrap;
 }
-
-/* The snoozed state recolours the same meta row rather than swapping views. */
-.idle-view.snoozed .dose-dot { background: var(--snoozed); }
-.idle-view.snoozed .chip { color: var(--snoozed-text); }
 
 #notifTitle {
   max-width: 330px;
@@ -191,42 +187,22 @@ button:focus-visible {
   text-wrap: pretty;
 }
 
+.next {
+  margin: 8px 0 0;
+  color: var(--secondary);
+  font-size: 12px;
+  line-height: 1.35;
+  font-variant-numeric: tabular-nums;
+  text-wrap: pretty;
+}
+
 /* ---------- actions ---------- */
 
 .actions {
   margin-top: auto;
   display: flex;
-  flex-direction: column;
   gap: 9px;
   padding: 16px 20px;
-}
-
-/* Choices expand in the flow above the buttons — nothing floats over the card. */
-.snooze-sheet {
-  display: flex;
-  gap: 7px;
-  animation: soft-in 240ms var(--spring);
-}
-
-.snooze-sheet[hidden] { display: none; }
-
-.snooze-sheet button {
-  flex: 1;
-  height: 36px;
-  border: 1px solid var(--line);
-  border-radius: 10px;
-  background: var(--sheet-button);
-  font-size: 13px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: background 160ms ease;
-}
-
-.snooze-sheet button:hover { background: var(--sheet-button-hover); }
-
-.action-row {
-  display: flex;
-  gap: 9px;
 }
 
 .btn {
@@ -252,6 +228,7 @@ button:focus-visible {
 
 .secondary {
   width: 132px;
+  flex: none;
   border: 1px solid var(--line-strong);
   background: var(--secondary-bg);
   font-size: 14px;
@@ -259,68 +236,6 @@ button:focus-visible {
 }
 
 .secondary:hover { background: var(--secondary-hover); }
-
-/* ---------- result ---------- */
-
-.result-view {
-  position: relative;
-  z-index: 2;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 13px;
-  height: 100%;
-  animation: soft-in 300ms var(--spring);
-}
-
-.result-view[hidden] { display: none; }
-
-.result-ring {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 56px;
-  height: 56px;
-  border-radius: 999px;
-  background: var(--accent);
-  animation: ring-in 380ms var(--spring);
-}
-
-.result-ring svg { width: 30px; height: 30px; }
-
-/* The tick draws itself in, matching the source's confirmation moment. */
-.result-ring path {
-  stroke-dasharray: 30;
-  animation: draw-check 420ms 100ms var(--spring) both;
-}
-
-.result-title {
-  font-size: 17px;
-  font-weight: 600;
-  letter-spacing: -.02em;
-}
-
-.result-subtitle {
-  margin-top: -9px;
-  color: var(--secondary);
-  font-size: 12.5px;
-}
-
-.undo {
-  position: absolute;
-  top: 14px;
-  right: 16px;
-  padding: 2px;
-  border: 0;
-  background: none;
-  color: var(--faint);
-  font-size: 12px;
-  cursor: pointer;
-}
-
-.undo:hover { color: var(--text); }
-.undo[hidden] { display: none; }
 
 /* ---------- motion ---------- */
 
@@ -332,20 +247,10 @@ button:focus-visible {
   from { opacity: 0; transform: translateY(6px); }
 }
 
-@keyframes ring-in {
-  from { opacity: 0; transform: scale(.86); }
-}
-
-@keyframes draw-check {
-  from { stroke-dashoffset: 30; }
-  to { stroke-dashoffset: 0; }
-}
-
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
     animation-duration: .01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: .01ms !important;
   }
-  .result-ring path { stroke-dashoffset: 0; }
 }

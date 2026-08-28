@@ -1,7 +1,6 @@
 /* Inhaler Reminder — settings surface.
-   Implements Claude Design direction 2a "Дыхание". Every value below is taken
-   from that source; every colour goes through a token so the dark theme cannot
-   leave a hardcoded light value behind. */
+   Apple-grade light/dark theme ("Дыхание"). Every colour goes through a token
+   so the dark theme cannot leave a hardcoded light value behind. */
 
 :root {
   --bg: #f2f2f0;
@@ -21,6 +20,7 @@
   --row-hover: #fafaf9;
 
   --accent: #12a594;
+  --on-accent: #ffffff;
   --evening: #c3c8f0;
 
   --track: #e6e6e3;
@@ -74,6 +74,7 @@ html[data-theme="dark"] {
   --row-hover: #232325;
 
   --accent: #2fd3bc;
+  --on-accent: #04231c;
   --evening: #5b62d6;
 
   --track: #2c2c2e;
@@ -101,6 +102,10 @@ html[data-theme="dark"] {
 
   --danger: #ff6b6b;
 }
+
+/* Native controls (time picker, select popup) follow the active theme. */
+html { color-scheme: light; }
+html[data-theme="dark"] { color-scheme: dark; }
 
 @font-face {
   font-family: "Manrope Local";
@@ -236,6 +241,32 @@ select:focus-visible {
   text-transform: uppercase;
 }
 
+.section-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.section-head .section-title { margin: 0 0 0 2px; }
+
+.add-button {
+  flex: none;
+  padding: 5px 13px;
+  border: 0;
+  border-radius: 999px;
+  background: var(--accent);
+  color: var(--on-accent);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 140ms ease, opacity 140ms ease;
+}
+
+.add-button::before { content: "+ "; }
+.add-button:hover { opacity: .88; }
+.add-button:active { transform: scale(.96); }
+
 /* ---------- today ---------- */
 
 .today-section {
@@ -266,6 +297,8 @@ select:focus-visible {
   font-size: 13px;
   text-wrap: pretty;
 }
+
+.today-heading p[hidden] { display: none; }
 
 .today-status-dots {
   flex: none;
@@ -304,8 +337,8 @@ select:focus-visible {
   border-radius: 999px;
 }
 
-.track-window.morning { left: 37.5%; width: 12.5%; background: var(--accent); }
-.track-window.evening { left: 75%; width: 12.5%; background: var(--evening); }
+.track-window.band-0 { background: var(--accent); }
+.track-window.band-1 { background: var(--evening); }
 
 .track-now,
 .track-now-pulse {
@@ -321,38 +354,179 @@ select:focus-visible {
 .track-now { box-shadow: 0 0 0 3px var(--now-ring); }
 .track-now-pulse { animation: now-pulse 2.8s ease-in-out infinite; }
 
-/* ---------- missed / backdated notice ---------- */
+/* ---------- schedule ---------- */
 
-.missed-card {
+.window-row {
+  padding: 12px 14px 14px;
+}
+
+.window-row + .window-row { border-top: 1px solid var(--divider-soft); }
+
+.window-row-top {
   display: flex;
   align-items: center;
-  gap: 11px;
-  padding: 10px 12px;
-  border: 1px solid var(--notice-line);
-  border-radius: 12px;
-  background: var(--notice-bg);
-  animation: soft-in 300ms var(--spring);
+  gap: 9px;
 }
 
-.missed-card[hidden],
-.backdated-row[hidden] { display: none; }
-
-.missed-card svg {
+.dose-dot {
   flex: none;
-  width: 17px;
-  height: 17px;
-  color: var(--notice-icon);
+  width: 10px;
+  height: 10px;
+  border-radius: 999px;
 }
 
-.missed-copy { flex: 1; min-width: 0; }
-.missed-copy strong { display: block; font-size: 13.5px; font-weight: 500; }
+.dose-dot.band-0 { background: var(--accent); }
+.dose-dot.band-1 { background: var(--evening); }
 
-.missed-copy span {
-  display: block;
-  margin-top: 2px;
+.window-name {
+  flex: 1;
+  min-width: 0;
+}
+
+.window-row-times {
+  display: flex;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.time-field {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.time-label {
   color: var(--secondary);
-  font-size: 11.5px;
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: .02em;
 }
+
+.text-input,
+.time-input {
+  padding: 6px 9px;
+  border: 1px solid var(--hairline);
+  border-radius: 8px;
+  background: var(--field-button);
+  font-size: 13px;
+}
+
+.time-input {
+  width: 100%;
+  font-variant-numeric: tabular-nums;
+}
+
+.remove-button {
+  flex: none;
+  padding: 5px 9px;
+  border: 1px solid var(--hairline);
+  border-radius: 8px;
+  background: transparent;
+  color: var(--danger);
+  font-size: 11.5px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: opacity 140ms ease;
+}
+
+.remove-button:hover { opacity: .75; }
+.remove-button:disabled { opacity: .32; cursor: default; }
+
+/* ---------- counter ---------- */
+
+.counter-top {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 14px;
+}
+
+.counter-head {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.counter-number {
+  font-size: 34px;
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: -.02em;
+  font-variant-numeric: tabular-nums;
+}
+
+.counter-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.counter-label {
+  color: var(--editor-label);
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.counter-of {
+  color: var(--secondary);
+  font-size: 12px;
+}
+
+.progress {
+  height: 8px;
+  border-radius: 999px;
+  background: var(--track);
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  border-radius: 999px;
+  background: var(--accent);
+  transition: width 320ms var(--spring);
+}
+
+.counter-empty {
+  color: var(--danger);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.counter-empty[hidden] { display: none; }
+
+/* ---------- replace inhaler ---------- */
+
+.replace-control {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 9px 14px 12px;
+}
+
+.replace-toggle {
+  align-self: flex-start;
+  padding: 3px 0;
+  border: 0;
+  background: none;
+  color: var(--accent);
+  font-size: 13.5px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.replace-toggle:hover { opacity: .75; }
+
+.replace-form {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.replace-form[hidden] { display: none; }
+
+.replace-input { flex: 1; min-width: 0; }
 
 .compact-button {
   flex: none;
@@ -369,36 +543,13 @@ select:focus-visible {
 
 .compact-button:active { transform: scale(.97); }
 
-.backdated-row {
-  display: flex;
-  align-items: center;
-  gap: 9px;
-  padding: 9px 12px;
-  animation: soft-in 300ms var(--spring);
+.compact-button.primary {
+  border-color: transparent;
+  background: var(--accent);
+  color: var(--on-accent);
 }
-
-.backdated-row svg { flex: none; width: 15px; height: 15px; color: var(--accent); }
-.backdated-row span { color: var(--secondary); font-size: 12.5px; }
-
-.backdated-row button {
-  margin-left: auto;
-  padding: 2px;
-  border: 0;
-  background: none;
-  color: var(--secondary);
-  font-size: 12px;
-  cursor: pointer;
-}
-
-.backdated-row button:hover { opacity: .6; }
 
 /* ---------- history ---------- */
-
-.history-section {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
 
 .history-heading {
   display: flex;
@@ -414,38 +565,57 @@ select:focus-visible {
   font-variant-numeric: tabular-nums;
 }
 
-.history-rows {
+.history-card { padding: 10px 14px 12px; }
+
+.history-table {
   display: flex;
   flex-direction: column;
-  gap: 5px;
-  padding-left: 2px;
+  gap: 3px;
 }
 
 .history-row {
   display: flex;
   align-items: center;
-  gap: 9px;
+  gap: 8px;
+  min-height: 24px;
 }
 
-.history-label {
-  width: 34px;
+.history-row.history-header {
+  min-height: 20px;
+  margin-bottom: 2px;
+  padding-bottom: 4px;
+  border-bottom: 1px solid var(--divider-soft);
+}
+
+.history-date {
   flex: none;
+  width: 58px;
+  color: var(--secondary);
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+}
+
+.history-col {
   color: var(--secondary);
   font-size: 10.5px;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
-.history-dots {
-  flex: 1;
-  display: grid;
-  grid-template-columns: repeat(14, 9px);
-  justify-content: space-between;
-  gap: 4px;
+.history-cell {
+  flex: 1 1 0;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
 }
 
 .history-dot {
+  flex: none;
   width: 9px;
   height: 9px;
-  aspect-ratio: 1;
   border-radius: 999px;
 }
 
@@ -455,23 +625,20 @@ select:focus-visible {
 .history-dot.disabled,
 .history-dot.unknown { box-shadow: inset 0 0 0 1.5px var(--dot-ring); opacity: .4; }
 
-.history-dates {
-  display: flex;
-  align-items: center;
-  gap: 9px;
-  padding-top: 1px;
-}
-
-.history-dates .history-label { width: 34px; }
-
-.history-scale {
-  flex: 1;
-  display: flex;
-  justify-content: space-between;
+.cell-action {
+  padding: 1px 7px;
+  border: 1px solid var(--hairline);
+  border-radius: 6px;
+  background: transparent;
   color: var(--secondary);
-  font-size: 10px;
-  font-variant-numeric: tabular-nums;
+  font-size: 10.5px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: color 140ms ease;
 }
+
+.cell-action:hover { color: var(--text); }
 
 /* ---------- grouped cards ---------- */
 
@@ -486,140 +653,6 @@ select:focus-visible {
   height: 1px;
   margin-left: 14px;
   background: var(--divider);
-}
-
-/* ---------- schedule ---------- */
-
-.dose-summary {
-  display: flex;
-  align-items: center;
-  gap: 11px;
-  width: 100%;
-  padding: 11px 14px;
-  border: 0;
-  background: transparent;
-  text-align: left;
-  cursor: pointer;
-}
-
-.dose-summary:hover { background: var(--row-hover); }
-
-.dose-dot {
-  flex: none;
-  width: 10px;
-  height: 10px;
-  border-radius: 999px;
-}
-
-.dose-dot.morning { background: var(--accent); }
-.dose-dot.evening { background: var(--evening); }
-
-.dose-main { flex: 1; min-width: 0; }
-.dose-main strong { display: block; font-size: 14.5px; font-weight: 500; }
-
-.dose-main small {
-  display: block;
-  margin-top: 2px;
-  overflow: hidden;
-  color: var(--secondary);
-  font-size: 12px;
-  white-space: nowrap;
-  text-overflow: ellipsis;
-}
-
-.dose-time {
-  color: var(--secondary);
-  font-size: 14px;
-  font-variant-numeric: tabular-nums;
-  white-space: nowrap;
-}
-
-.chevron {
-  flex: none;
-  width: 15px;
-  height: 15px;
-  color: var(--chevron);
-  transition: transform 300ms var(--spring);
-}
-
-.dose-summary[aria-expanded="true"] .chevron { transform: rotate(90deg); }
-
-/* Height animates instead of the row being replaced, so the card never jumps. */
-.dose-editor {
-  overflow: hidden;
-  max-height: 0;
-  opacity: 0;
-  transition: max-height 360ms var(--spring), opacity 220ms ease;
-}
-
-.dose-editor.open { max-height: 200px; opacity: 1; }
-
-.dose-editor-inner {
-  display: flex;
-  flex-direction: column;
-  gap: 9px;
-  padding: 12px 14px 14px;
-  border-top: 1px solid var(--divider-soft);
-}
-
-.editor-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
-.editor-row > span { color: var(--editor-label); font-size: 13.5px; }
-.editor-row.toggle-row { padding-top: 2px; }
-
-/* ---------- steppers ---------- */
-
-.stepper {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  padding: 3px;
-  border-radius: 999px;
-  background: var(--field);
-}
-
-.stepper button {
-  width: 28px;
-  height: 28px;
-  padding: 0;
-  border: 0;
-  border-radius: 999px;
-  background: var(--field-button);
-  box-shadow: var(--field-button-shadow);
-  font-size: 15px;
-  line-height: 1;
-  cursor: pointer;
-  transition: transform 120ms ease;
-}
-
-.stepper button:active { transform: scale(.94); }
-
-.stepper .value {
-  min-width: 58px;
-  text-align: center;
-  font-size: 14.5px;
-  font-weight: 600;
-  font-variant-numeric: tabular-nums;
-}
-
-.stepper.wide .value { min-width: 66px; font-size: 14px; }
-
-/* The real inputs stay in the DOM for keyboard and assistive use, visually
-   replaced by the stepper readout. */
-.sr-only {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  padding: 0;
-  margin: -1px;
-  overflow: hidden;
-  clip: rect(0, 0, 0, 0);
-  white-space: nowrap;
-  border: 0;
 }
 
 /* ---------- settings rows ---------- */
@@ -690,6 +723,69 @@ select:focus-visible {
   outline-offset: 2px;
 }
 
+/* ---------- steppers ---------- */
+
+.stepper {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px;
+  border-radius: 999px;
+  background: var(--field);
+}
+
+.stepper button {
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: 0;
+  border-radius: 999px;
+  background: var(--field-button);
+  box-shadow: var(--field-button-shadow);
+  font-size: 15px;
+  line-height: 1;
+  cursor: pointer;
+  transition: transform 120ms ease;
+}
+
+.stepper button:active { transform: scale(.94); }
+
+.stepper .value {
+  min-width: 58px;
+  text-align: center;
+  font-size: 14.5px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.stepper.wide .value { min-width: 66px; font-size: 14px; }
+
+/* The real inputs stay in the DOM for keyboard and assistive use, visually
+   replaced by the stepper readout. */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* ---------- select ---------- */
+
+.select {
+  padding: 5px 10px;
+  border: 1px solid var(--hairline);
+  border-radius: 8px;
+  background: var(--field-button);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+}
+
 /* ---------- segmented ---------- */
 
 .segmented {
@@ -717,8 +813,6 @@ select:focus-visible {
   box-shadow: var(--seg-shadow);
 }
 
-.language-segmented button { padding: 4px 13px; }
-
 /* ---------- motion ---------- */
 
 @keyframes soft-in {
@@ -732,7 +826,7 @@ select:focus-visible {
 
 @media (max-width: 405px) {
   .content { padding-inline: 14px; }
-  .dose-time { display: none; }
+  .counter-number { font-size: 28px; }
 }
 
 @media (prefers-reduced-motion: reduce) {

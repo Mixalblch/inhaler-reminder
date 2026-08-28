@@ -1,7 +1,7 @@
 {
   "name": "inhaler-reminder",
   "productName": "Inhaler Reminder",
-  "version": "0.2.1",
+  "version": "0.3.0",
   "description": "Asthma inhaler reminder for Windows",
   "main": "src/main/main.js",
   "scripts": {
@@ -11,8 +11,9 @@
     "test:history": "node scripts/history-test.js",
     "test:scheduler": "node scripts/scheduler-test.js",
     "test:autostart": "node scripts/autostart-test.js",
+    "test:inhaler": "node scripts/inhaler-test.js",
     "design-check": "node scripts/design-check.js",
-    "test": "npm run test:config && npm run test:history && npm run test:scheduler && npm run test:autostart && npm run design-check",
+    "test": "npm run test:config && npm run test:history && npm run test:scheduler && npm run test:autostart && npm run test:inhaler && npm run design-check",
     "render-icon": "electron scripts/render-icon.js",
     "capture": "electron . --capture-dir=qa",
     "pack": "electron-builder --dir",

@@ -5,6 +5,7 @@ const i18n = require('./i18n');
 const schedule = require('./schedule');
 const history = require('./history');
 const scheduler = require('./scheduler');
+const inhaler = require('./inhaler');
 const { createTray } = require('./tray');
 const { setAutostart, getAutostart } = require('./autostart');
 
@@ -23,23 +24,18 @@ let notificationWindow = null;
 let tray = null;
 let quitting = false;
 
-// Design-QA runs get their own profile so a capture never touches real data.
 if (captureDir) {
   app.setPath('userData', path.join(app.getPath('temp'), 'inhaler-qa-' + process.pid));
 }
 
 const gotLock = app.requestSingleInstanceLock();
 if (!gotLock) {
-  // A second launch hands over to the running copy. Say so under --smoke:
-  // otherwise the check exits 0 without having started anything.
   if (isSmoke) console.log('SMOKE_SKIPPED another instance is already running');
   app.quit();
 } else {
   app.on('second-instance', function () { showSettings(); });
   app.on('before-quit', function () { quitting = true; });
   app.on('window-all-closed', function () { /* keep running in tray */ });
-  // Without this a failure in onReady is swallowed as an unhandled rejection:
-  // the process lingers with no tray, no window, and no message.
   app.whenReady().then(onReady).catch(function (error) {
     console.error('Failed to start:', error);
     app.exit(1);
@@ -66,30 +62,26 @@ function onReady() {
   scheduler.start({
     getConfig: function () { return config.get(); },
     isIdleSeconds: function () {
-      // A QA capture runs unattended, so the "is the user here?" input is
-      // stubbed. The scheduling logic itself is exercised unchanged.
       if (captureDir) return 0;
       try { return powerMonitor.getSystemIdleTime(); } catch (e) { return 0; }
     },
     getHistoryDay: history.getDay,
     onReminder: showNotification,
-    recordConfirmed: function (day, dose, details) {
-      history.confirm(day, dose, details);
+    recordConfirmed: function (day, id, details) {
+      history.confirm(day, id, details);
       broadcastHistory();
     },
-    recordMissed: function (day, dose) {
-      history.miss(day, dose);
+    recordMissed: function (day, id) {
+      history.miss(day, id);
       broadcastHistory();
     },
     recordSnoozed: history.setSnooze,
     clearSnooze: history.clearSnooze,
-    undoConfirmed: function (day, dose) {
-      history.undoTodayConfirmation(day, dose);
+    undoConfirmed: function (day, id) {
+      history.undoTodayConfirmation(day, id);
       broadcastHistory();
     },
     onDayChanged: function () {
-      // Open today's entries for the new day and push the fresh record to the
-      // settings window, which would otherwise keep rendering yesterday.
       history.sync(config.get(), new Date());
       broadcastHistory();
     },
@@ -98,7 +90,6 @@ function onReady() {
     }
   });
 
-  // "System" appearance has to follow the OS while the app is running.
   nativeTheme.on('updated', function () {
     if (config.get().appearance === 'system') broadcast('config:changed', config.get());
   });
@@ -180,25 +171,12 @@ function createNotificationWindow() {
   notificationWindow.loadFile(path.join(__dirname, '..', 'renderer', 'notification', 'notification.html'));
   notificationWindow.on('closed', function () {
     notificationWindow = null;
-    // Closing the reminder is a deferral, not a silent dismissal.
     if (!quitting) scheduler.dismiss();
   });
 }
 
-// Which reminder follows this one — used for "next reminder" in the confirmation.
-function nextReminderAfter(dose, cfg) {
-  const order = schedule.orderedDoses(cfg);
-  if (!order.length) return null;
-  const index = order.findIndex(function (item) { return item.dose === dose; });
-  if (index === -1) return { day: 'tomorrow', time: order[0].start };
-  if (index + 1 < order.length) return { day: 'today', time: order[index + 1].start };
-  return { day: 'tomorrow', time: order[0].start };
-}
-
-function showNotification(dose) {
-  createNotificationWindow();
+function positionNotificationWindow() {
   if (!notificationWindow) return;
-
   const wa = screen.getPrimaryDisplay().workArea;
   const size = notificationWindow.getSize();
   notificationWindow.setPosition(
@@ -206,21 +184,9 @@ function showNotification(dose) {
     wa.y + wa.height - size[1] - 16,
     false
   );
+}
 
-  const cfg = config.get();
-  const win = cfg.windows[dose];
-  const payload = {
-    windowKey: dose,
-    strings: i18n.strings(),
-    locale: cfg.locale,
-    appearance: cfg.appearance,
-    soundEnabled: cfg.soundEnabled,
-    snoozeMinutes: cfg.snoozeMinutes,
-    start: win.start,
-    end: win.end,
-    nextReminder: nextReminderAfter(dose, cfg)
-  };
-
+function sendNotification(payload) {
   const send = function () { notificationWindow.webContents.send('notification:show', payload); };
   if (notificationWindow.webContents.isLoading()) {
     notificationWindow.webContents.once('did-finish-load', send);
@@ -231,8 +197,101 @@ function showNotification(dose) {
   notificationWindow.focus();
 }
 
+function windowDisplayName(cfg, id) {
+  const win = schedule.windowFor(cfg, id);
+  if (win && win.name) return win.name;
+  const idx = schedule.windowIds(cfg).indexOf(id) + 1;
+  const s = i18n.strings();
+  const tpl = s['notif.unnamed'] || 'Dose {n}';
+  return tpl.replace('{n}', String(idx));
+}
+
+function nextReminderAfter(id, cfg) {
+  const order = schedule.orderedWindows(cfg);
+  if (!order.length) return null;
+  const index = order.findIndex(function (item) { return item.id === id; });
+  if (index === -1) return { day: 'tomorrow', time: order[0].start };
+  if (index + 1 < order.length) return { day: 'today', time: order[index + 1].start };
+  return { day: 'tomorrow', time: order[0].start };
+}
+
+function showNotification(id) {
+  createNotificationWindow();
+  if (!notificationWindow) return;
+  positionNotificationWindow();
+
+  const cfg = config.get();
+  const win = schedule.windowFor(cfg, id);
+  const state = inhaler.get();
+  const payload = {
+    kind: 'dose',
+    windowId: id,
+    windowName: win ? win.name : '',
+    windowIndex: schedule.windowIds(cfg).indexOf(id) + 1,
+    strings: i18n.strings(),
+    locale: cfg.locale,
+    appearance: cfg.appearance,
+    soundEnabled: cfg.soundEnabled,
+    snoozeMinutes: cfg.snoozeMinutes,
+    start: win ? win.start : '09:00',
+    end: win ? win.end : '12:00',
+    nextReminder: nextReminderAfter(id, cfg),
+    remaining: state.remaining,
+    total: state.total
+  };
+  sendNotification(payload);
+}
+
+function showLowNotification() {
+  createNotificationWindow();
+  if (!notificationWindow) return;
+  positionNotificationWindow();
+  const cfg = config.get();
+  const state = inhaler.get();
+  sendNotification({
+    kind: 'low',
+    remaining: state.remaining,
+    total: state.total,
+    strings: i18n.strings(),
+    locale: cfg.locale,
+    appearance: cfg.appearance,
+    soundEnabled: cfg.soundEnabled
+  });
+}
+
 function hideNotification() {
   if (notificationWindow) notificationWindow.hide();
+}
+
+// ---- dose counter ----
+
+function applyDoseUsed() {
+  const cfg = config.get();
+  const result = inhaler.use(cfg.puffsPerDose || 1);
+  broadcastInhaler();
+  return result;
+}
+
+function applyDoseUndone() {
+  const cfg = config.get();
+  const result = inhaler.undo(cfg.puffsPerDose || 1);
+  broadcastInhaler();
+  return result;
+}
+
+// Decrement + either show the low-dose notice or hide the reminder.
+function handleDoseUsed() {
+  const result = applyDoseUsed();
+  if (result.low != null) showLowNotification();
+  else hideNotification();
+  return result;
+}
+
+function broadcastInhaler() {
+  const state = inhaler.get();
+  broadcast('inhaler:changed', state);
+  if (tray && tray.refresh) tray.refresh();
+  return state;
 }
 
 // ---- shared state ----
@@ -250,17 +309,16 @@ function broadcastHistory() {
 
 function trayDoseStatus() {
   const cfg = config.get();
-  const strings = i18n.strings();
-  const dose = scheduler.currentDoseKey(new Date());
-  if (!dose || !cfg.windows[dose]) return null;
-  const name = strings['notif.' + dose] || dose;
-  return name + ' · ' + cfg.windows[dose].start + ' — ' + cfg.windows[dose].end;
+  const id = scheduler.currentDoseKey(new Date());
+  if (!id) return null;
+  const win = schedule.windowFor(cfg, id);
+  if (!win) return null;
+  return windowDisplayName(cfg, id) + ' · ' + win.start + ' — ' + win.end;
 }
 
 function markDoseNow() {
-  const dose = scheduler.confirmNow();
-  // The reminder must not linger once its dose has been marked elsewhere.
-  if (dose) hideNotification();
+  const id = scheduler.confirmNow();
+  if (id) handleDoseUsed();
   broadcastHistory();
 }
 
@@ -290,8 +348,6 @@ ipcMain.handle('config:set', function (_e, patch) {
 
   if (scheduleChanged) {
     hideNotification();
-    // Widening a window can make a dose reachable again before the scheduler
-    // rebuilds its view from history, so reconcile first.
     history.reconcileScheduleChange(cfg, new Date());
   }
   history.sync(cfg, new Date());
@@ -321,6 +377,14 @@ ipcMain.handle('autostart:set', function (_e, enabled) {
   return cfg.autostart;
 });
 
+ipcMain.handle('inhaler:get', function () { return inhaler.get(); });
+
+ipcMain.handle('inhaler:replace', function (_e, total) {
+  const state = inhaler.setTotal(total);
+  broadcastInhaler();
+  return state;
+});
+
 ipcMain.handle('history:summary', function () { return historySummary(); });
 
 ipcMain.handle('history:backdate', function (_e, payload) {
@@ -330,18 +394,34 @@ ipcMain.handle('history:backdate', function (_e, payload) {
   const result = entry && entry.status === 'missed'
     ? history.confirm(p.date, p.dose, { backdated: true })
     : null;
+  if (result) handleDoseUsed();
   return { ok: !!result, summary: broadcastHistory() };
 });
 
 ipcMain.handle('history:undo-backdate', function (_e, payload) {
   const p = payload || {};
   const result = history.undoBackdate(p.date, p.dose);
+  if (result) applyDoseUndone();
   return { ok: !!result, summary: broadcastHistory() };
 });
 
-ipcMain.handle('notification:confirm', function () { return scheduler.confirm(); });
-ipcMain.handle('notification:undo-confirm', function (_e, dose) { return scheduler.undoConfirmation(dose); });
-ipcMain.handle('notification:snooze', function (_e, minutes) { return scheduler.snooze(minutes); });
+ipcMain.handle('notification:confirm', function () {
+  const id = scheduler.confirm();
+  if (id) handleDoseUsed();
+  return id;
+});
+
+ipcMain.handle('notification:undo-confirm', function (_e, id) {
+  const ok = scheduler.undoConfirmation(id);
+  if (ok) applyDoseUndone();
+  return ok;
+});
+
+ipcMain.handle('notification:snooze', function (_e, minutes) {
+  const granted = scheduler.snooze(minutes);
+  hideNotification();
+  return granted;
+});
 
 ipcMain.on('notification:hide', function () { hideNotification(); });
 ipcMain.on('window:hide', function () { if (settingsWindow) settingsWindow.hide(); });

@@ -4,7 +4,7 @@ const path = require('path');
 const { writeJsonAtomic, readJsonWithBackup } = require('./atomic-store');
 
 const DEFAULTS = {
-  version: 1,
+  version: 2,
   locale: 'ru',
   appearance: 'system',
   soundEnabled: true,
@@ -12,11 +12,13 @@ const DEFAULTS = {
   snoozeMinutes: 15,
   graceMinutes: 120,
   idleThresholdSeconds: 30,
-  windows: {
-    morning: { enabled: true, start: '09:00', end: '12:00' },
-    evening: { enabled: true, start: '18:00', end: '21:00' }
-  }
+  puffsPerDose: 1,
+  windows: [
+    { id: 'w1', name: '', enabled: true, start: '09:00', end: '12:00' }
+  ]
 };
+
+const LOCALES = ['ru', 'en', 'ja', 'zh'];
 
 let configPath = null;
 let cached = null;
@@ -46,28 +48,50 @@ function toMinutes(value) {
   return Number(value.slice(0, 2)) * 60 + Number(value.slice(3, 5));
 }
 
-// A window must be a forward range inside one day. If a patch would invert it,
-// the whole window falls back rather than leaving an unreachable schedule.
-function normalizeWindow(w, def) {
+// A window must be a forward range inside one day.
+function normalizeWindow(w) {
   const src = (w && typeof w === 'object') ? w : {};
-  const start = isValidTime(src.start) ? src.start : def.start;
-  const end = isValidTime(src.end) ? src.end : def.end;
+  const start = isValidTime(src.start) ? src.start : '09:00';
+  const end = isValidTime(src.end) ? src.end : '12:00';
   const ordered = toMinutes(start) < toMinutes(end);
   return {
-    enabled: typeof src.enabled === 'boolean' ? src.enabled : def.enabled,
-    start: ordered ? start : def.start,
-    end: ordered ? end : def.end
+    name: typeof src.name === 'string' ? src.name.slice(0, 40) : '',
+    enabled: typeof src.enabled === 'boolean' ? src.enabled : true,
+    start: ordered ? start : '09:00',
+    end: ordered ? end : '12:00'
   };
 }
 
-// `fallback` keeps a partial patch from resetting untouched fields to DEFAULTS.
+// Stable ids: existing ids are kept; missing or duplicate ids get the next
+// available wN, so deleting one window never renumbers the others.
+function normalizeWindows(raw) {
+  const src = Array.isArray(raw) ? raw : [];
+  const used = {};
+  const result = [];
+  src.forEach(function (w) {
+    const win = normalizeWindow(w);
+    let id = (w && typeof w === 'object' && typeof w.id === 'string' && w.id) ? w.id : '';
+    if (!id || used[id]) {
+      let n = 1;
+      while (used['w' + n]) n++;
+      id = 'w' + n;
+    }
+    used[id] = true;
+    win.id = id;
+    result.push(win);
+  });
+  if (!result.length) {
+    result.push({ id: 'w1', name: '', enabled: true, start: '09:00', end: '12:00' });
+  }
+  return result;
+}
+
 function normalize(input, fallback) {
   const src = (input && typeof input === 'object') ? input : {};
   const base = (fallback && typeof fallback === 'object') ? fallback : DEFAULTS;
-  const w = (src.windows && typeof src.windows === 'object') ? src.windows : {};
   return {
-    version: 1,
-    locale: (src.locale === 'en' || src.locale === 'ru') ? src.locale : base.locale,
+    version: 2,
+    locale: LOCALES.indexOf(src.locale) !== -1 ? src.locale : base.locale,
     appearance: (src.appearance === 'system' || src.appearance === 'light' || src.appearance === 'dark')
       ? src.appearance
       : base.appearance,
@@ -76,10 +100,8 @@ function normalize(input, fallback) {
     snoozeMinutes: clampInt(src.snoozeMinutes, 1, 180, base.snoozeMinutes),
     graceMinutes: clampInt(src.graceMinutes, 0, 360, base.graceMinutes),
     idleThresholdSeconds: clampInt(src.idleThresholdSeconds, 5, 600, base.idleThresholdSeconds),
-    windows: {
-      morning: normalizeWindow(w.morning, base.windows.morning),
-      evening: normalizeWindow(w.evening, base.windows.evening)
-    }
+    puffsPerDose: clampInt(src.puffsPerDose, 1, 2, base.puffsPerDose),
+    windows: normalizeWindows(src.windows)
   };
 }
 
@@ -102,33 +124,14 @@ function set(patch) {
   const current = load();
   const p = (patch && typeof patch === 'object') ? patch : {};
   let windows = current.windows;
-  if (p.windows && typeof p.windows === 'object') {
-    windows = {
-      morning: Object.assign({}, current.windows.morning, p.windows.morning || {}),
-      evening: Object.assign({}, current.windows.evening, p.windows.evening || {})
-    };
-  }
+  if (Array.isArray(p.windows)) windows = p.windows;
   const merged = Object.assign({}, current, p, { windows: windows });
   cached = normalize(merged, current);
   save();
   return cached;
 }
 
-function setFilePathForTests(target) {
-  configPath = target;
-  cached = null;
-}
+function setFilePathForTests(target) { configPath = target; cached = null; }
+function resetForTests() { configPath = null; cached = null; }
 
-function resetForTests() {
-  configPath = null;
-  cached = null;
-}
-
-module.exports = {
-  get: get,
-  set: set,
-  save: save,
-  DEFAULTS: DEFAULTS,
-  _setFilePathForTests: setFilePathForTests,
-  _resetForTests: resetForTests
-};
+module.exports = { get: get, set: set, save: save, DEFAULTS: DEFAULTS, _setFilePathForTests: setFilePathForTests, _resetForTests: resetForTests };

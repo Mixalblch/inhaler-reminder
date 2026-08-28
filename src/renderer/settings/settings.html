@@ -20,6 +20,7 @@
     </header>
 
     <main class="content">
+      <!-- Today -->
       <section class="today-section" aria-labelledby="todayLabel">
         <div class="section-title" id="todayLabel" data-i18n="today.label">Сегодня</div>
         <div class="today-heading">
@@ -27,156 +28,70 @@
             <h1 id="todayHeadline"></h1>
             <p id="todayDescription"></p>
           </div>
-          <div class="today-status-dots" id="todayDots">
-            <span id="morningTodayDot"></span>
-            <span id="eveningTodayDot"></span>
-          </div>
+          <div class="today-status-dots" id="todayDots"></div>
         </div>
-        <div class="day-track" aria-hidden="true">
-          <span class="track-window morning"></span>
-          <span class="track-window evening"></span>
-          <span class="track-now" id="trackNow"></span>
-          <span class="track-now-pulse" id="trackNowPulse"></span>
+        <div class="day-track" id="dayTrack" aria-hidden="true"></div>
+      </section>
+
+      <!-- Schedule -->
+      <section class="section" aria-labelledby="scheduleTitle">
+        <div class="section-head">
+          <h2 class="section-title" id="scheduleTitle" data-i18n="settings.schedule">Расписание</h2>
+          <button type="button" class="add-button" id="addWindowBtn" data-i18n="schedule.addWindow">Добавить окно</button>
+        </div>
+        <div class="card" id="scheduleList"></div>
+      </section>
+
+      <!-- Inhaler -->
+      <section class="section" aria-labelledby="counterTitle">
+        <h2 class="section-title" id="counterTitle" data-i18n="counter.title">Ингалятор</h2>
+        <div class="card counter-card">
+          <div class="counter-top">
+            <div class="counter-head">
+              <span class="counter-number" id="counterRemaining">0</span>
+              <div class="counter-meta">
+                <span class="counter-label" data-i18n="counter.remaining">Осталось доз</span>
+                <span class="counter-of" id="counterOf">из 0</span>
+              </div>
+            </div>
+            <div class="progress" aria-hidden="true">
+              <div class="progress-fill" id="counterBar"></div>
+            </div>
+            <div class="counter-empty" id="counterEmpty" data-i18n="counter.empty" hidden>0 доз — замените ингалятор</div>
+          </div>
+          <div class="row-divider"></div>
+          <div class="setting-row tight">
+            <label for="puffsSelect" data-i18n="counter.puffs">Пшиков за приём</label>
+            <select id="puffsSelect" class="select">
+              <option value="1" data-i18n="counter.puffs.1">1 пшик</option>
+              <option value="2" data-i18n="counter.puffs.2">2 пшика</option>
+            </select>
+          </div>
+          <div class="row-divider"></div>
+          <div class="replace-control">
+            <button type="button" class="replace-toggle" id="replaceToggle" data-i18n="counter.replace">Заменить ингалятор</button>
+            <div class="replace-form" id="replaceForm" hidden>
+              <label class="sr-only" for="replaceTotal" data-i18n="counter.replaceHint">Введите количество доз в новом ингаляторе</label>
+              <input class="text-input replace-input" type="number" id="replaceTotal" min="1" max="9999" step="1" inputmode="numeric" placeholder="200" />
+              <button type="button" class="compact-button primary" id="replaceSave" data-i18n="counter.save">Сохранить</button>
+              <button type="button" class="compact-button" id="replaceCancel" data-i18n="counter.cancel">Отмена</button>
+            </div>
+          </div>
         </div>
       </section>
 
-      <div class="missed-card" id="missedCard" hidden>
-        <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-          <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.7" stroke-dasharray="3 3.4" />
-        </svg>
-        <div class="missed-copy">
-          <strong id="missedTitle"></strong>
-          <span id="missedDescription"></span>
-        </div>
-        <button type="button" class="compact-button" id="backdateBtn"></button>
-      </div>
-
-      <div class="backdated-row" id="backdatedRow" hidden>
-        <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-          <path d="M20 6 9 17l-5-5" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" />
-        </svg>
-        <span id="backdatedText"></span>
-        <button type="button" id="undoBackdateBtn"></button>
-      </div>
-
-      <section class="history-section" aria-labelledby="historyLabel">
+      <!-- History -->
+      <section class="section" aria-labelledby="historyLabel">
         <div class="history-heading">
           <h2 class="section-title" id="historyLabel" data-i18n="history.title">Последние 14 дней</h2>
           <span class="history-score" id="historyScore"></span>
         </div>
-        <div class="history-rows" id="historyChart" role="group" data-i18n-aria="a11y.history">
-          <div class="history-row">
-            <span class="history-label" data-i18n="history.morningRow">утро</span>
-            <div class="history-dots" id="morningHistory"></div>
-          </div>
-          <div class="history-row">
-            <span class="history-label" data-i18n="history.eveningRow">вечер</span>
-            <div class="history-dots" id="eveningHistory"></div>
-          </div>
-          <div class="history-dates" aria-hidden="true">
-            <span class="history-label"></span>
-            <div class="history-scale">
-              <span id="historyStartDate"></span>
-              <span id="historyMiddleDate"></span>
-              <span id="historyEndDate"></span>
-            </div>
-          </div>
+        <div class="card history-card">
+          <div class="history-table" id="historyTable" role="group" data-i18n-aria="a11y.history"></div>
         </div>
       </section>
 
-      <section class="section" aria-labelledby="scheduleTitle">
-        <h2 class="section-title" id="scheduleTitle" data-i18n="settings.schedule">Расписание</h2>
-        <div class="card">
-          <button type="button" class="dose-summary" data-editor="morningEditor" aria-expanded="false" aria-controls="morningEditor" data-i18n-aria="a11y.expandMorning">
-            <span class="dose-dot morning" aria-hidden="true"></span>
-            <span class="dose-main">
-              <strong data-i18n="settings.morning">Утро</strong>
-              <small id="morningStatus"></small>
-            </span>
-            <span class="dose-time" id="morningRange"></span>
-            <svg class="chevron" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-              <path d="M9 6l6 6-6 6" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" />
-            </svg>
-          </button>
-          <div class="dose-editor" id="morningEditor">
-            <div class="dose-editor-inner">
-              <div class="editor-row">
-                <span data-i18n="settings.from">Начало</span>
-                <div class="stepper">
-                  <button type="button" data-time-step="-15" data-target="morningStart" data-i18n-aria="a11y.timeEarlier">−</button>
-                  <span class="value" id="morningStartValue"></span>
-                  <button type="button" data-time-step="15" data-target="morningStart" data-i18n-aria="a11y.timeLater">+</button>
-                </div>
-                <label class="sr-only" for="morningStart" data-i18n="settings.from">Начало</label>
-                <input class="sr-only" type="time" id="morningStart" step="900" />
-              </div>
-              <div class="editor-row">
-                <span data-i18n="settings.to">Конец</span>
-                <div class="stepper">
-                  <button type="button" data-time-step="-15" data-target="morningEnd" data-i18n-aria="a11y.timeEarlier">−</button>
-                  <span class="value" id="morningEndValue"></span>
-                  <button type="button" data-time-step="15" data-target="morningEnd" data-i18n-aria="a11y.timeLater">+</button>
-                </div>
-                <label class="sr-only" for="morningEnd" data-i18n="settings.to">Конец</label>
-                <input class="sr-only" type="time" id="morningEnd" step="900" />
-              </div>
-              <div class="editor-row toggle-row">
-                <span id="morningLabel" data-i18n="schedule.morningToggle">Напоминать утром</span>
-                <label class="switch">
-                  <input type="checkbox" id="morningEnabled" aria-labelledby="morningLabel" />
-                  <span class="slider"></span>
-                </label>
-              </div>
-            </div>
-          </div>
-
-          <div class="row-divider"></div>
-
-          <button type="button" class="dose-summary" data-editor="eveningEditor" aria-expanded="false" aria-controls="eveningEditor" data-i18n-aria="a11y.expandEvening">
-            <span class="dose-dot evening" aria-hidden="true"></span>
-            <span class="dose-main">
-              <strong data-i18n="settings.evening">Вечер</strong>
-              <small id="eveningStatus"></small>
-            </span>
-            <span class="dose-time" id="eveningRange"></span>
-            <svg class="chevron" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-              <path d="M9 6l6 6-6 6" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" />
-            </svg>
-          </button>
-          <div class="dose-editor" id="eveningEditor">
-            <div class="dose-editor-inner">
-              <div class="editor-row">
-                <span data-i18n="settings.from">Начало</span>
-                <div class="stepper">
-                  <button type="button" data-time-step="-15" data-target="eveningStart" data-i18n-aria="a11y.timeEarlier">−</button>
-                  <span class="value" id="eveningStartValue"></span>
-                  <button type="button" data-time-step="15" data-target="eveningStart" data-i18n-aria="a11y.timeLater">+</button>
-                </div>
-                <label class="sr-only" for="eveningStart" data-i18n="settings.from">Начало</label>
-                <input class="sr-only" type="time" id="eveningStart" step="900" />
-              </div>
-              <div class="editor-row">
-                <span data-i18n="settings.to">Конец</span>
-                <div class="stepper">
-                  <button type="button" data-time-step="-15" data-target="eveningEnd" data-i18n-aria="a11y.timeEarlier">−</button>
-                  <span class="value" id="eveningEndValue"></span>
-                  <button type="button" data-time-step="15" data-target="eveningEnd" data-i18n-aria="a11y.timeLater">+</button>
-                </div>
-                <label class="sr-only" for="eveningEnd" data-i18n="settings.to">Конец</label>
-                <input class="sr-only" type="time" id="eveningEnd" step="900" />
-              </div>
-              <div class="editor-row toggle-row">
-                <span id="eveningLabel" data-i18n="schedule.eveningToggle">Напоминать вечером</span>
-                <label class="switch">
-                  <input type="checkbox" id="eveningEnabled" aria-labelledby="eveningLabel" />
-                  <span class="slider"></span>
-                </label>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
+      <!-- Reminders -->
       <section class="section" aria-labelledby="remindersTitle">
         <h2 class="section-title" id="remindersTitle" data-i18n="settings.notifications">Напоминания</h2>
         <div class="card">
@@ -205,6 +120,7 @@
         <p class="section-note" data-i18n="settings.graceHint"></p>
       </section>
 
+      <!-- Application -->
       <section class="section" aria-labelledby="prefsTitle">
         <h2 class="section-title" id="prefsTitle" data-i18n="settings.preferences">Приложение</h2>
         <div class="card">
@@ -234,11 +150,13 @@
           </div>
           <div class="row-divider"></div>
           <div class="setting-row tight">
-            <span data-i18n="settings.language">Язык</span>
-            <div class="segmented language-segmented" role="radiogroup" data-i18n-aria="a11y.language">
-              <button type="button" role="radio" data-locale="ru">RU</button>
-              <button type="button" role="radio" data-locale="en">EN</button>
-            </div>
+            <label for="languageSelect" data-i18n="settings.language">Язык</label>
+            <select id="languageSelect" class="select">
+              <option value="ru">Русский</option>
+              <option value="en">English</option>
+              <option value="ja">日本語</option>
+              <option value="zh">中文</option>
+            </select>
           </div>
         </div>
       </section>

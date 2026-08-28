@@ -47,15 +47,15 @@ function harness(cfg, day) {
     getConfig: function () { return cfg; },
     isIdleSeconds: function () { return 0; },
     getHistoryDay: function () { return day; },
-    onReminder: function (dose) { events.reminders.push(dose); },
-    recordConfirmed: function (_k, dose) { day[dose] = { status: 'confirmed', snoozeUntil: 0 }; },
-    recordMissed: function (_k, dose) { day[dose] = { status: 'missed', snoozeUntil: 0 }; events.missed.push(dose); },
-    recordSnoozed: function (_k, dose, until) {
-      day[dose] = { status: 'pending', snoozeUntil: until };
-      events.snoozes.push({ dose: dose, until: until });
+    onReminder: function (id) { events.reminders.push(id); },
+    recordConfirmed: function (_k, id) { day[id] = { status: 'confirmed', snoozeUntil: 0 }; },
+    recordMissed: function (_k, id) { day[id] = { status: 'missed', snoozeUntil: 0 }; events.missed.push(id); },
+    recordSnoozed: function (_k, id, until) {
+      day[id] = { status: 'pending', snoozeUntil: until };
+      events.snoozes.push({ id: id, until: until });
     },
-    clearSnooze: function (_k, dose) { if (day[dose]) day[dose].snoozeUntil = 0; },
-    undoConfirmed: function (_k, dose) { day[dose] = { status: 'pending', snoozeUntil: 0 }; },
+    clearSnooze: function (_k, id) { if (day[id]) day[id].snoozeUntil = 0; },
+    undoConfirmed: function (_k, id) { day[id] = { status: 'pending', snoozeUntil: 0 }; },
     onStateChanged: function () {}
   };
   return { events: events, options: options };
@@ -65,10 +65,10 @@ const BASE = {
   snoozeMinutes: 15,
   graceMinutes: 120,
   idleThresholdSeconds: 30,
-  windows: {
-    morning: { enabled: true, start: '09:00', end: '12:00' },
-    evening: { enabled: true, start: '18:00', end: '21:00' }
-  }
+  windows: [
+    { id: 'w1', name: '', enabled: true, start: '09:00', end: '12:00' },
+    { id: 'w2', name: '', enabled: true, start: '18:00', end: '21:00' }
+  ]
 };
 
 function cloneConfig(patch) {
@@ -80,34 +80,32 @@ function cloneConfig(patch) {
 at(20, 0);
 {
   const cfg = cloneConfig();
-  cfg.windows.morning = { enabled: true, start: '18:00', end: '21:00' };
+  cfg.windows[0] = { id: 'w1', name: '', enabled: true, start: '18:00', end: '21:00' };
   const day = {};
   const h = harness(cfg, day);
   const s = loadScheduler();
   s.start(h.options);
-  assert.deepStrictEqual(h.events.reminders, ['morning'], 'only one overlapping reminder fires');
-  assert.strictEqual(s.confirm(), 'morning');
+  assert.deepStrictEqual(h.events.reminders, ['w1'], 'only one overlapping reminder fires');
+  assert.strictEqual(s.confirm(), 'w1');
   s.tick();
-  assert.deepStrictEqual(h.events.reminders, ['morning', 'evening'], 'the queued dose fires next');
-  assert.strictEqual(s.confirm(), 'evening');
+  assert.deepStrictEqual(h.events.reminders, ['w1', 'w2'], 'the queued dose fires next');
+  assert.strictEqual(s.confirm(), 'w2');
   assert.strictEqual(s.currentDoseKey(clock), null, 'nothing is pending once both are confirmed');
 }
 
 // --- a snooze may not outlive the catch-up deadline --------------------------
-// Regression: snoozing 180m at 20:55 used to fire at 23:55, an hour after
-// history had already recorded the dose as missed.
 at(20, 55);
 {
   const cfg = cloneConfig();
-  cfg.windows.morning.enabled = false;
+  cfg.windows[0].enabled = false;
   const day = {};
   const h = harness(cfg, day);
   const s = loadScheduler();
   s.start(h.options);
-  assert.deepStrictEqual(h.events.reminders, ['evening']);
+  assert.deepStrictEqual(h.events.reminders, ['w2']);
 
   const granted = s.snooze(180);
-  const deadline = schedule.deadlineMinutes(cfg, 'evening');   // 21:00 + 120 = 23:00
+  const deadline = schedule.deadlineMinutes(cfg, 'w2');
   assert.strictEqual(granted, deadline - (20 * 60 + 55), 'the snooze is clamped to the deadline');
 
   const until = h.events.snoozes[0].until;
@@ -116,80 +114,80 @@ at(20, 55);
 
   at(23, 30);
   s.tick();
-  assert.deepStrictEqual(h.events.reminders, ['evening'], 'no reminder fires after the deadline');
-  assert.deepStrictEqual(h.events.missed, ['evening'], 'the elapsed dose is recorded as missed');
+  assert.deepStrictEqual(h.events.reminders, ['w2'], 'no reminder fires after the deadline');
+  assert.deepStrictEqual(h.events.missed, ['w2'], 'the elapsed dose is recorded as missed');
 }
 
 // --- a snooze survives a restart --------------------------------------------
 at(20, 0);
 {
   const cfg = cloneConfig();
-  cfg.windows.morning.enabled = false;
+  cfg.windows[0].enabled = false;
   const day = {};
   const first = harness(cfg, day);
   const s1 = loadScheduler();
   s1.start(first.options);
   s1.snooze(30);
-  assert.strictEqual(day.evening.status, 'pending');
-  assert.ok(day.evening.snoozeUntil > clock.getTime());
+  assert.strictEqual(day.w2.status, 'pending');
+  assert.ok(day.w2.snoozeUntil > clock.getTime());
 
   const second = harness(cfg, day);
   const s2 = loadScheduler();
   s2.start(second.options);
   assert.deepStrictEqual(second.events.reminders, [], 'a live snooze is not re-fired on restart');
-  assert.strictEqual(s2.getState().windows.evening.status, 'snoozed');
+  assert.strictEqual(s2.getState().windows.w2.status, 'snoozed');
 
   at(20, 31);
   s2.tick();
-  assert.deepStrictEqual(second.events.reminders, ['evening'], 'it fires once the snooze elapses');
-  assert.strictEqual(day.evening.snoozeUntil, 0, 'firing clears the stored snooze');
+  assert.deepStrictEqual(second.events.reminders, ['w2'], 'it fires once the snooze elapses');
+  assert.strictEqual(day.w2.snoozeUntil, 0, 'firing clears the stored snooze');
 
   assert.strictEqual(s2.dismiss(), true, 'closing the window defers rather than dismisses');
-  assert.strictEqual(s2.getState().windows.evening.status, 'snoozed');
+  assert.strictEqual(s2.getState().windows.w2.status, 'snoozed');
 }
 
 // --- confirm / undo round trip ----------------------------------------------
 at(20, 0);
 {
   const cfg = cloneConfig();
-  cfg.windows.morning.enabled = false;
+  cfg.windows[0].enabled = false;
   const day = {};
   const h = harness(cfg, day);
   const s = loadScheduler();
   s.start(h.options);
-  const dose = s.confirm();
-  assert.strictEqual(dose, 'evening');
-  assert.strictEqual(s.getState().windows.evening.status, 'confirmed');
-  assert.strictEqual(s.undoConfirmation(dose), true, 'a confirmation is reversible');
-  assert.strictEqual(s.getState().windows.evening.status, 'pending');
-  assert.strictEqual(s.undoConfirmation('morning'), false, 'undo only applies to a confirmed dose');
+  const id = s.confirm();
+  assert.strictEqual(id, 'w2');
+  assert.strictEqual(s.getState().windows.w2.status, 'confirmed');
+  assert.strictEqual(s.undoConfirmation(id), true, 'a confirmation is reversible');
+  assert.strictEqual(s.getState().windows.w2.status, 'pending');
+  assert.strictEqual(s.undoConfirmation('w1'), false, 'undo only applies to a confirmed dose');
 }
 
 // --- widening the schedule reopens a dose missed earlier today ---------------
 at(20, 0);
 {
   const cfg = cloneConfig({ graceMinutes: 0 });
-  cfg.windows.morning.enabled = false;
-  cfg.windows.evening = { enabled: true, start: '18:00', end: '19:00' };
+  cfg.windows[0].enabled = false;
+  cfg.windows[1] = { id: 'w2', name: '', enabled: true, start: '18:00', end: '19:00' };
   const day = {};
   const h = harness(cfg, day);
   const s = loadScheduler();
   s.start(h.options);
-  assert.strictEqual(s.getState().windows.evening.status, 'missed');
+  assert.strictEqual(s.getState().windows.w2.status, 'missed');
   assert.strictEqual(s.currentDoseKey(clock), null, 'a missed dose is not offered by the tray');
 
-  cfg.windows.evening.end = '21:00';
-  day.evening = { status: 'pending', snoozeUntil: 0 };
+  cfg.windows[1].end = '21:00';
+  day.w2 = { status: 'pending', snoozeUntil: 0 };
   s.reload();
-  assert.deepStrictEqual(h.events.reminders, ['evening'], 'the reopened dose becomes eligible again');
+  assert.deepStrictEqual(h.events.reminders, ['w2'], 'the reopened dose becomes eligible again');
 }
 
 // --- a disabled window never fires ------------------------------------------
 at(20, 0);
 {
   const cfg = cloneConfig();
-  cfg.windows.morning.enabled = false;
-  cfg.windows.evening.enabled = false;
+  cfg.windows[0].enabled = false;
+  cfg.windows[1].enabled = false;
   const day = {};
   const h = harness(cfg, day);
   const s = loadScheduler();
@@ -202,7 +200,7 @@ at(20, 0);
 at(20, 0);
 {
   const cfg = cloneConfig();
-  cfg.windows.morning.enabled = false;
+  cfg.windows[0].enabled = false;
   const day = {};
   const h = harness(cfg, day);
   h.options.isIdleSeconds = function () { return 600; };
@@ -211,39 +209,33 @@ at(20, 0);
   assert.deepStrictEqual(h.events.reminders, [], 'nothing fires while the user is away');
   h.options.isIdleSeconds = function () { return 0; };
   s.tick();
-  assert.deepStrictEqual(h.events.reminders, ['evening'], 'it fires once they return');
+  assert.deepStrictEqual(h.events.reminders, ['w2'], 'it fires once they return');
 }
 
-
 // --- the tray names the dose that will actually fire next --------------------
-// At 13:00 the morning window has closed but is still inside its catch-up
-// period, so it — not the evening dose — is what fires next.
 at(13, 0);
 {
   const cfg = cloneConfig();
   const day = {};
   const h = harness(cfg, day);
-  h.options.isIdleSeconds = function () { return 600; };   // keep it from firing
+  h.options.isIdleSeconds = function () { return 600; };
   const s = loadScheduler();
   s.start(h.options);
-  assert.strictEqual(s.currentDoseKey(clock), 'morning', 'an overdue-but-reachable dose comes first');
+  assert.strictEqual(s.currentDoseKey(clock), 'w1', 'an overdue-but-reachable dose comes first');
 
   at(8, 0);
-  assert.strictEqual(s.currentDoseKey(clock), 'morning', 'before any window, the earliest is next');
+  assert.strictEqual(s.currentDoseKey(clock), 'w1', 'before any window, the earliest is next');
   at(15, 0);
-  assert.strictEqual(s.currentDoseKey(clock), 'evening', 'once morning expires, evening is next');
+  assert.strictEqual(s.currentDoseKey(clock), 'w2', 'once morning expires, evening is next');
 }
 
-
 // --- midnight rollover tells the app --------------------------------------
-// Regression: the day reset silently, so an open settings window kept showing
-// the previous day's doses until something else happened to fire.
 at(23, 58);
 {
   const cfg = cloneConfig();
   const day = {
-    morning: { status: 'confirmed', snoozeUntil: 0 },
-    evening: { status: 'confirmed', snoozeUntil: 0 }
+    w1: { status: 'confirmed', snoozeUntil: 0 },
+    w2: { status: 'confirmed', snoozeUntil: 0 }
   };
   const h = harness(cfg, day);
   const rolled = [];

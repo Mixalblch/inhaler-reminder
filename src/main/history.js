@@ -1,14 +1,12 @@
-// Persistent adherence record: one entry per day per dose.
+// Persistent adherence record: one entry per day per window id.
 //
-// Days the app never tracked stay absent rather than being backfilled as missed —
-// an install on Tuesday must not claim the user skipped Monday.
+// Days the app never tracked stay absent rather than being backfilled as missed.
 
 const { app } = require('electron');
 const path = require('path');
 const { writeJsonAtomic, readJsonWithBackup } = require('./atomic-store');
 const schedule = require('./schedule');
 
-const DOSES = schedule.DOSES;
 const STATUSES = ['pending', 'confirmed', 'missed', 'disabled'];
 const RETENTION_DAYS = 120;
 
@@ -48,12 +46,12 @@ function normalize(input) {
     if (!schedule.dateFromDayKey(key)) return;
     const raw = (rawDays[key] && typeof rawDays[key] === 'object') ? rawDays[key] : {};
     const day = {};
-    DOSES.forEach(function (dose) {
-      if (raw[dose]) day[dose] = normalizeDose(raw[dose]);
+    Object.keys(raw).forEach(function (id) {
+      if (raw[id]) day[id] = normalizeDose(raw[id]);
     });
     if (Object.keys(day).length) days[key] = day;
   });
-  return { version: 1, days: days };
+  return { version: 2, days: days };
 }
 
 function load() {
@@ -78,18 +76,16 @@ function ensureToday(config, now) {
   const day = dayOf(store, key);
   let changed = false;
 
-  DOSES.forEach(function (dose) {
-    const enabled = schedule.isEnabled(config, dose);
-    const existing = day[dose];
+  schedule.windowIds(config).forEach(function (id) {
+    const enabled = schedule.isEnabled(config, id);
+    const existing = day[id];
     if (enabled) {
-      // A window switched back on reopens the dose, but never overwrites a
-      // dose the user already resolved.
       if (!existing || existing.status === 'disabled') {
-        day[dose] = makeDose('pending');
+        day[id] = makeDose('pending');
         changed = true;
       }
     } else if (!existing || existing.status === 'pending') {
-      day[dose] = makeDose('disabled');
+      day[id] = makeDose('disabled');
       changed = true;
     }
   });
@@ -97,7 +93,7 @@ function ensureToday(config, now) {
   return changed;
 }
 
-// Rolls elapsed doses to `missed` and prunes beyond the retention horizon.
+// Rolls elapsed doses to missed and prunes beyond the retention horizon.
 function sync(config, value) {
   const now = schedule.toDate(value);
   const store = load();
@@ -106,22 +102,23 @@ function sync(config, value) {
 
   Object.keys(store.days).forEach(function (key) {
     if (key >= today) return;
-    DOSES.forEach(function (dose) {
-      const entry = store.days[key][dose];
+    const day = store.days[key];
+    Object.keys(day).forEach(function (id) {
+      const entry = day[id];
       if (entry && entry.status === 'pending') {
-        store.days[key][dose] = makeDose('missed');
+        day[id] = makeDose('missed');
         changed = true;
       }
     });
   });
 
   const day = store.days[today];
-  DOSES.forEach(function (dose) {
-    const entry = day && day[dose];
+  schedule.windowIds(config).forEach(function (id) {
+    const entry = day && day[id];
     if (!entry || entry.status !== 'pending') return;
-    if (!schedule.isEnabled(config, dose)) return;
-    if (!schedule.isReachable(config, dose, now)) {
-      day[dose] = makeDose('missed');
+    if (!schedule.isEnabled(config, id)) return;
+    if (!schedule.isReachable(config, id, now)) {
+      day[id] = makeDose('missed');
       changed = true;
     }
   });
@@ -142,52 +139,53 @@ function sync(config, value) {
 function getDay(key) {
   const day = load().days[key] || {};
   const out = {};
-  DOSES.forEach(function (dose) {
-    out[dose] = day[dose] ? Object.assign({}, day[dose]) : null;
+  Object.keys(day).forEach(function (id) {
+    out[id] = Object.assign({}, day[id]);
   });
   return out;
 }
 
-function recordStatus(dayKey, dose, status, options) {
-  if (!schedule.dateFromDayKey(dayKey) || DOSES.indexOf(dose) === -1) return null;
+function recordStatus(dayKey, id, status, options) {
+  if (!schedule.dateFromDayKey(dayKey)) return null;
+  if (typeof id !== 'string' || !id) return null;
   if (STATUSES.indexOf(status) === -1) return null;
   const store = load();
   const day = dayOf(store, dayKey);
   const opts = options || {};
-  day[dose] = makeDose(status, {
+  day[id] = makeDose(status, {
     at: status === 'confirmed' ? (opts.at || new Date().toISOString()) : null,
     backdated: opts.backdated,
     snoozeUntil: opts.snoozeUntil
   });
   save();
-  return Object.assign({}, day[dose]);
+  return Object.assign({}, day[id]);
 }
 
-function confirm(dayKey, dose, options) {
-  return recordStatus(dayKey, dose, 'confirmed', options);
+function confirm(dayKey, id, options) {
+  return recordStatus(dayKey, id, 'confirmed', options);
 }
 
-function miss(dayKey, dose) {
-  return recordStatus(dayKey, dose, 'missed');
+function miss(dayKey, id) {
+  return recordStatus(dayKey, id, 'missed');
 }
 
-// Persisting the snooze lets a deferred reminder survive an app restart.
-function setSnooze(dayKey, dose, until) {
-  if (!schedule.dateFromDayKey(dayKey) || DOSES.indexOf(dose) === -1) return null;
+function setSnooze(dayKey, id, until) {
+  if (!schedule.dateFromDayKey(dayKey)) return null;
+  if (typeof id !== 'string' || !id) return null;
   const value = Number(until);
   if (!Number.isFinite(value) || value <= 0) return null;
   const store = load();
   const day = dayOf(store, dayKey);
-  const current = day[dose];
+  const current = day[id];
   if (current && current.status !== 'pending') return null;
-  day[dose] = makeDose('pending', { snoozeUntil: value });
+  day[id] = makeDose('pending', { snoozeUntil: value });
   save();
-  return Object.assign({}, day[dose]);
+  return Object.assign({}, day[id]);
 }
 
-function clearSnooze(dayKey, dose) {
+function clearSnooze(dayKey, id) {
   const store = load();
-  const entry = store.days[dayKey] && store.days[dayKey][dose];
+  const entry = store.days[dayKey] && store.days[dayKey][id];
   if (!entry || entry.status !== 'pending' || !entry.snoozeUntil) return false;
   entry.snoozeUntil = 0;
   save();
@@ -195,7 +193,7 @@ function clearSnooze(dayKey, dose) {
 }
 
 // Widening a window (or the grace period) makes a dose that was auto-missed
-// today reachable again, so the user is not punished for fixing their schedule.
+// today reachable again.
 function reconcileScheduleChange(config, value) {
   const now = schedule.toDate(value);
   const store = load();
@@ -203,12 +201,11 @@ function reconcileScheduleChange(config, value) {
   let changed = ensureToday(config, now);
   const day = store.days[today] || {};
 
-  DOSES.forEach(function (dose) {
-    const entry = day[dose];
-    // Only auto-missed doses reopen; a backdated confirmation stays put.
+  schedule.windowIds(config).forEach(function (id) {
+    const entry = day[id];
     if (!entry || entry.status !== 'missed') return;
-    if (schedule.isReachable(config, dose, now)) {
-      day[dose] = makeDose('pending');
+    if (schedule.isReachable(config, id, now)) {
+      day[id] = makeDose('pending');
       changed = true;
     }
   });
@@ -217,16 +214,16 @@ function reconcileScheduleChange(config, value) {
   return changed;
 }
 
-function undoBackdate(dayKey, dose) {
-  const entry = load().days[dayKey] && load().days[dayKey][dose];
+function undoBackdate(dayKey, id) {
+  const entry = load().days[dayKey] && load().days[dayKey][id];
   if (!entry || entry.status !== 'confirmed' || !entry.backdated) return null;
-  return recordStatus(dayKey, dose, 'missed');
+  return recordStatus(dayKey, id, 'missed');
 }
 
-function undoTodayConfirmation(dayKey, dose) {
-  const entry = load().days[dayKey] && load().days[dayKey][dose];
+function undoTodayConfirmation(dayKey, id) {
+  const entry = load().days[dayKey] && load().days[dayKey][id];
   if (!entry || entry.status !== 'confirmed' || entry.backdated) return null;
-  return recordStatus(dayKey, dose, 'pending');
+  return recordStatus(dayKey, id, 'pending');
 }
 
 function summary(config, value, count) {
@@ -234,6 +231,7 @@ function summary(config, value, count) {
   sync(config, now);
   const store = load();
   const length = Math.max(1, Math.min(60, Number(count) || 14));
+  const ids = schedule.windowIds(config);
   const days = [];
   let confirmedCount = 0;
   let trackedCount = 0;
@@ -243,17 +241,17 @@ function summary(config, value, count) {
     const d = new Date(now.getFullYear(), now.getMonth(), now.getDate() - offset, 12);
     const key = schedule.localDayKey(d);
     const stored = store.days[key] || {};
-    const item = { date: key, morning: 'unknown', evening: 'unknown' };
-    DOSES.forEach(function (dose) {
-      const entry = stored[dose];
+    const item = { date: key };
+    ids.forEach(function (id) { item[id] = 'unknown'; });
+    ids.forEach(function (id) {
+      const entry = stored[id];
       if (!entry) return;
-      item[dose] = entry.status;
-      // `disabled` days are not part of the adherence denominator.
+      item[id] = entry.status;
       if (entry.status === 'confirmed' || entry.status === 'missed' || entry.status === 'pending') {
         trackedCount += 1;
         if (entry.status === 'confirmed') confirmedCount += 1;
       }
-      if (entry.status === 'missed') latestMissed = { date: key, dose: dose };
+      if (entry.status === 'missed') latestMissed = { date: key, id: id };
     });
     days.push(item);
   }

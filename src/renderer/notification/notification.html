@@ -16,39 +16,22 @@
       <path d="M132 26a90 90 0 0 1 0 148" stroke="currentColor" stroke-width="7" fill="none" stroke-linecap="round" opacity=".45" />
     </svg>
 
-    <div class="idle-view" id="idleView">
-      <div class="copy">
-        <div class="dose-meta">
-          <span class="dose-dot" id="doseDot"></span>
-          <span class="chip" id="doseChip"></span>
-          <span class="dose-window" id="doseWindow"></span>
-        </div>
-        <h1 id="notifTitle"></h1>
-        <p id="notifBody"></p>
+    <div class="copy">
+      <div class="dose-meta" id="doseMeta">
+        <span class="dose-dot" aria-hidden="true"></span>
+        <span class="chip" id="doseChip"></span>
+        <span class="badge" id="doseBadge"></span>
       </div>
 
-      <div class="actions">
-        <div class="snooze-sheet" id="snoozeSheet" hidden>
-          <button type="button" data-snooze="15"></button>
-          <button type="button" data-snooze="30"></button>
-          <button type="button" data-snooze="60"></button>
-        </div>
-        <div class="action-row">
-          <button type="button" class="btn primary" id="confirmBtn"></button>
-          <button type="button" class="btn secondary" id="snoozeBtn" aria-expanded="false" aria-controls="snoozeSheet"></button>
-        </div>
-      </div>
+      <h1 id="notifTitle"></h1>
+      <p id="notifBody"></p>
+      <p class="next" id="nextLine"></p>
     </div>
 
-    <div class="result-view" id="resultView" hidden>
-      <button type="button" class="undo" id="undoBtn"></button>
-      <div class="result-ring" aria-hidden="true">
-        <svg viewBox="0 0 24 24" fill="none">
-          <path d="M20 6 9 17l-5-5" stroke="#fff" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" />
-        </svg>
-      </div>
-      <div class="result-title" id="resultTitle"></div>
-      <div class="result-subtitle" id="resultSubtitle"></div>
+    <div class="actions">
+      <button type="button" class="btn primary" id="confirmBtn"></button>
+      <button type="button" class="btn secondary" id="snoozeBtn"></button>
+      <button type="button" class="btn primary" id="okBtn" hidden></button>
     </div>
   </div>
 

@@ -1,13 +1,12 @@
 // Decides when a reminder is shown.
 //
 // The persistent record lives in history.js; this module keeps only the
-// transient layer on top of it — which dose is on screen right now, and when a
-// snoozed dose becomes due again.
+// transient layer on top of it — which window is on screen right now, and when
+// a snoozed window becomes due again.
 
 const schedule = require('./schedule');
 
 const TICK_MS = 10000;
-const DOSES = schedule.DOSES;
 
 let timer = null;
 let state = null;
@@ -30,18 +29,18 @@ function freshState(now) {
   const persisted = historyDay(key);
   const windows = {};
 
-  DOSES.forEach(function (dose) {
-    const entry = persisted[dose];
+  schedule.windowIds(config()).forEach(function (id) {
+    const entry = persisted[id];
     if (entry && (entry.status === 'confirmed' || entry.status === 'missed' || entry.status === 'disabled')) {
-      windows[dose] = { status: entry.status, snoozeUntil: 0 };
+      windows[id] = { status: entry.status, snoozeUntil: 0 };
       return;
     }
     const until = entry && Number(entry.snoozeUntil);
     if (Number.isFinite(until) && until > current.getTime()) {
-      windows[dose] = { status: 'snoozed', snoozeUntil: until };
+      windows[id] = { status: 'snoozed', snoozeUntil: until };
       return;
     }
-    windows[dose] = { status: 'pending', snoozeUntil: 0 };
+    windows[id] = { status: 'pending', snoozeUntil: 0 };
   });
 
   return { day: key, windows: windows };
@@ -51,21 +50,21 @@ function changed() {
   if (options && options.onStateChanged) options.onStateChanged(state);
 }
 
-function markMissed(dose) {
-  state.windows[dose].status = 'missed';
-  state.windows[dose].snoozeUntil = 0;
-  if (options.recordMissed) options.recordMissed(state.day, dose);
+function markMissed(id) {
+  state.windows[id].status = 'missed';
+  state.windows[id].snoozeUntil = 0;
+  if (options.recordMissed) options.recordMissed(state.day, id);
 }
 
-// Returns false when another reminder already owns the screen; that dose stays
-// queued and is retried on a later tick.
-function fire(dose) {
-  if (pendingWindow && pendingWindow !== dose) return false;
-  state.windows[dose].status = 'fired';
-  state.windows[dose].snoozeUntil = 0;
-  pendingWindow = dose;
-  if (options.clearSnooze) options.clearSnooze(state.day, dose);
-  if (options.onReminder) options.onReminder(dose);
+// Returns false when another reminder already owns the screen; that window
+// stays queued and is retried on a later tick.
+function fire(id) {
+  if (pendingWindow && pendingWindow !== id) return false;
+  state.windows[id].status = 'fired';
+  state.windows[id].snoozeUntil = 0;
+  pendingWindow = id;
+  if (options.clearSnooze) options.clearSnooze(state.day, id);
+  if (options.onReminder) options.onReminder(id);
   changed();
   return true;
 }
@@ -74,9 +73,6 @@ function tick() {
   const now = new Date();
   const today = schedule.localDayKey(now);
   if (!state || state.day !== today) {
-    // Midnight resets the day. Anything showing yesterday's doses — the open
-    // settings window, the tray — has to be told, or it stays stale until the
-    // next reminder happens to fire.
     const rolled = !!state && state.day !== today;
     pendingWindow = null;
     state = freshState(now);
@@ -89,35 +85,34 @@ function tick() {
   const threshold = cfg.idleThresholdSeconds != null ? cfg.idleThresholdSeconds : 30;
   const atKeyboard = idle < threshold;
 
-  for (let i = 0; i < DOSES.length; i++) {
-    const dose = DOSES[i];
-    const ws = state.windows[dose];
+  const ids = schedule.windowIds(cfg);
+  for (let i = 0; i < ids.length; i++) {
+    const id = ids[i];
+    const ws = state.windows[id];
 
-    if (!schedule.isEnabled(cfg, dose)) {
+    if (!schedule.isEnabled(cfg, id)) {
       if (ws.status === 'pending' || ws.status === 'snoozed') ws.status = 'disabled';
       continue;
     }
     if (ws.status === 'disabled') ws.status = 'pending';
     if (ws.status === 'confirmed' || ws.status === 'missed') continue;
 
-    // A dose on screen keeps the screen; anything else that claimed `fired`
-    // without resolving is returned to the queue.
     if (ws.status === 'fired') {
-      if (pendingWindow === dose) continue;
+      if (pendingWindow === id) continue;
       ws.status = 'pending';
     }
 
-    const reachable = schedule.isReachable(cfg, dose, now);
+    const reachable = schedule.isReachable(cfg, id, now);
 
     if (ws.status === 'snoozed') {
-      if (!reachable) { markMissed(dose); changed(); continue; }
-      if (now.getTime() >= ws.snoozeUntil && fire(dose)) break;
+      if (!reachable) { markMissed(id); changed(); continue; }
+      if (now.getTime() >= ws.snoozeUntil && fire(id)) break;
       continue;
     }
 
-    if (!reachable) { markMissed(dose); changed(); continue; }
+    if (!reachable) { markMissed(id); changed(); continue; }
     // Wait for the user to be at the keyboard rather than firing into an empty room.
-    if (schedule.isDue(cfg, dose, now) && atKeyboard && fire(dose)) break;
+    if (schedule.isDue(cfg, id, now) && atKeyboard && fire(id)) break;
   }
 }
 
@@ -143,22 +138,20 @@ function reload() {
 }
 
 function confirm() {
-  const dose = pendingWindow;
-  if (!dose || !state) return null;
-  state.windows[dose].status = 'confirmed';
-  state.windows[dose].snoozeUntil = 0;
+  const id = pendingWindow;
+  if (!id || !state) return null;
+  state.windows[id].status = 'confirmed';
+  state.windows[id].snoozeUntil = 0;
   pendingWindow = null;
-  if (options.recordConfirmed) options.recordConfirmed(state.day, dose, { backdated: false });
+  if (options.recordConfirmed) options.recordConfirmed(state.day, id, { backdated: false });
   changed();
-  return dose;
+  return id;
 }
 
-// Snoozing may not push a dose past the point where history would call it
-// missed, otherwise the two records contradict each other.
 function snooze(minutes) {
-  const dose = pendingWindow;
+  const id = pendingWindow;
   pendingWindow = null;
-  if (!dose || !state) { changed(); return null; }
+  if (!id || !state) { changed(); return null; }
 
   const cfg = config();
   const requested = Number(minutes);
@@ -167,60 +160,55 @@ function snooze(minutes) {
     : (cfg.snoozeMinutes != null ? cfg.snoozeMinutes : 15);
 
   const now = new Date();
-  const deadline = schedule.deadlineMinutes(cfg, dose);
+  const deadline = schedule.deadlineMinutes(cfg, id);
   const remaining = deadline - schedule.minutesOfDay(now);
-  if (remaining <= 0) { markMissed(dose); changed(); return null; }
+  if (remaining <= 0) { markMissed(id); changed(); return null; }
 
   const granted = Math.min(wanted, remaining);
   const until = now.getTime() + granted * 60000;
-  state.windows[dose].status = 'snoozed';
-  state.windows[dose].snoozeUntil = until;
-  if (options.recordSnoozed) options.recordSnoozed(state.day, dose, until);
+  state.windows[id].status = 'snoozed';
+  state.windows[id].snoozeUntil = until;
+  if (options.recordSnoozed) options.recordSnoozed(state.day, id, until);
   changed();
   return granted;
 }
 
-// The reminder window was dismissed without a choice — treat it as a snooze.
 function dismiss() {
   if (!pendingWindow) return false;
   snooze(config().snoozeMinutes);
   return true;
 }
 
-// Which dose the tray should talk about: the one on screen, else the next one
-// still open today.
 function currentDoseKey(now) {
   if (pendingWindow) return pendingWindow;
   if (!state) return null;
   const cfg = config();
   const at = schedule.toDate(now);
-  const open = schedule.orderedDoses(cfg).filter(function (item) {
-    const ws = state.windows[item.dose];
+  const open = schedule.orderedWindows(cfg).filter(function (item) {
+    const ws = state.windows[item.id];
     if (!ws || ws.status === 'confirmed' || ws.status === 'missed' || ws.status === 'disabled') return false;
-    return schedule.isReachable(cfg, item.dose, at);
+    return schedule.isReachable(cfg, item.id, at);
   });
   if (!open.length) return null;
-  // A dose whose window has already opened is what `tick` will fire next, so the
-  // tray must name that one rather than the next one on the clock.
-  const due = open.filter(function (item) { return schedule.isDue(cfg, item.dose, at); });
-  return (due.length ? due[0] : open[0]).dose;
+  const due = open.filter(function (item) { return schedule.isDue(cfg, item.id, at); });
+  return (due.length ? due[0] : open[0]).id;
 }
 
 function confirmNow() {
-  const dose = currentDoseKey(new Date());
-  if (!dose || !state) return null;
-  state.windows[dose].status = 'confirmed';
-  state.windows[dose].snoozeUntil = 0;
+  const id = currentDoseKey(new Date());
+  if (!id || !state) return null;
+  state.windows[id].status = 'confirmed';
+  state.windows[id].snoozeUntil = 0;
   pendingWindow = null;
-  if (options.recordConfirmed) options.recordConfirmed(state.day, dose, { backdated: false });
+  if (options.recordConfirmed) options.recordConfirmed(state.day, id, { backdated: false });
   changed();
-  return dose;
+  return id;
 }
 
-function undoConfirmation(dose) {
-  if (!state || !dose || !state.windows[dose] || state.windows[dose].status !== 'confirmed') return false;
-  state.windows[dose].status = 'pending';
-  if (options.undoConfirmed) options.undoConfirmed(state.day, dose);
+function undoConfirmation(id) {
+  if (!state || !id || !state.windows[id] || state.windows[id].status !== 'confirmed') return false;
+  state.windows[id].status = 'pending';
+  if (options.undoConfirmed) options.undoConfirmed(state.day, id);
   changed();
   return true;
 }

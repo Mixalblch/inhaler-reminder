@@ -2,28 +2,19 @@ module.exports = {
   'app.name': 'Ингалятор',
   'app.fullName': 'Напоминание об ингаляторе',
 
-  // --- Сегодня ---
   'today.label': 'Сегодня',
-  'today.bothRemaining': 'Сегодня две дозы',
-  'today.morningRemaining': 'Осталась утренняя доза',
-  'today.eveningRemaining': 'Осталась вечерняя доза',
-  'today.complete': 'Обе дозы приняты',
-  'today.morningDone': 'Утренняя доза принята',
+  'today.dosesRemaining': 'Сегодня: {n} приёмов впереди',
+  'today.complete': 'Все приёмы выполнены',
   'today.nothingScheduled': 'На сегодня напоминаний нет',
   'today.window': 'Напомним между {start} и {end}, когда вы будете за компьютером',
   'today.snoozed': 'Отложено — вернёмся через {duration}',
   'today.nextTomorrow': 'Следующее напоминание — завтра в {time}',
-  'today.eveningOff': 'Вечернее напоминание выключено',
-  'today.morningOff': 'Утреннее напоминание выключено',
-  'today.allOff': 'Оба напоминания выключены',
+  'today.allOff': 'Все напоминания выключены',
   'today.reviewDay': 'День завершён',
 
-  // --- История ---
   'history.title': 'Последние 14 дней',
   'history.of': 'из',
   'history.noData': 'пока нет данных',
-  'history.morningRow': 'утро',
-  'history.eveningRow': 'вечер',
   'history.missedDescription': 'Бывает. Можно отметить задним числом.',
   'history.mark': 'Отметить',
   'history.undo': 'Отменить',
@@ -31,36 +22,43 @@ module.exports = {
   'history.backdatedDescription': 'Запись сохранена в локальной истории.',
   'history.missedOn': '{dose}, {date} — пропущено',
 
-  // Подписи строк расписания — с заглавной буквы.
   'status.confirmed': 'Принято',
   'status.confirmedAt': 'Принято в {time}',
   'status.pending': 'Ожидает',
   'status.missed': 'Пропущено',
   'status.disabled': 'Выключено',
 
-  // Подсказки к точкам истории — со строчной, внутри фразы «14 авг · принято».
   'dot.confirmed': 'принято',
   'dot.pending': 'ожидает',
   'dot.missed': 'пропущено',
   'dot.disabled': 'выключено',
   'dot.unknown': 'нет данных',
 
-  // --- Расписание ---
   'settings.schedule': 'Расписание',
-  'settings.morning': 'Утро',
-  'settings.evening': 'Вечер',
   'settings.from': 'Начало',
   'settings.to': 'Конец',
-  'schedule.morningToggle': 'Напоминать утром',
-  'schedule.eveningToggle': 'Напоминать вечером',
+  'schedule.addWindow': 'Добавить окно',
+  'schedule.removeWindow': 'Удалить',
+  'schedule.windowNameLabel': 'Название (необязательно)',
+  'schedule.windowNamePlaceholder': 'Приём {n}',
 
-  // --- Напоминания ---
   'settings.notifications': 'Напоминания',
   'settings.snoozeShort': 'Отложить на',
   'settings.graceShort': 'Догонять в течение',
   'settings.graceHint': 'Напоминание ждёт, пока вы за компьютером. Если интервал прошёл без вас — придёт в течение этого времени, затем день тихо помечается как пропущенный.',
 
-  // --- Приложение ---
+  'counter.title': 'Ингалятор',
+  'counter.remaining': 'Осталось доз',
+  'counter.of': 'из',
+  'counter.replace': 'Заменить ингалятор',
+  'counter.replaceHint': 'Введите количество доз в новом ингаляторе',
+  'counter.save': 'Сохранить',
+  'counter.cancel': 'Отмена',
+  'counter.empty': '0 доз — замените ингалятор',
+  'counter.puffs': 'Пшиков за приём',
+  'counter.puffs.1': '1 пшик',
+  'counter.puffs.2': '2 пшика',
+
   'settings.preferences': 'Приложение',
   'settings.sound': 'Звук',
   'settings.autostart': 'Запуск с Windows',
@@ -77,10 +75,7 @@ module.exports = {
   'units.hours': 'ч',
   'units.oneHour': '1 час',
 
-  // --- Уведомление ---
   'notif.title': 'Пора использовать ингалятор',
-  'notif.morning': 'Утренняя доза',
-  'notif.evening': 'Вечерняя доза',
   'notif.body': 'Согласно назначению врача. Отметьте, когда сделаете.',
   'notif.confirm': 'Готово',
   'notif.snooze': 'Позже',
@@ -90,8 +85,14 @@ module.exports = {
   'notif.noNext': 'Больше напоминаний не запланировано',
   'notif.snoozedFor': 'Вернусь через {duration}',
   'notif.windowWillClose': 'Окно закроется само. Можно отметить приём и сейчас.',
+  'notif.unnamed': 'Приём {n}',
+  'notif.dosesLeft': 'Осталось {n} доз',
+  'notif.lowTitle': 'Ингалятор заканчивается',
+  'notif.lowBody': 'Осталось {n} доз — купите новый ингалятор',
+  'notif.emptyTitle': 'Ингалятор пуст',
+  'notif.emptyBody': '0 доз — замените ингалятор',
+  'notif.ok': 'Понятно',
 
-  // --- Трей ---
   'tray.nextDose': 'Следующая доза',
   'tray.markNow': 'Отметить приём сейчас',
   'tray.settings': 'Настройки…',
@@ -99,7 +100,6 @@ module.exports = {
   'tray.quit': 'Выйти',
   'tray.tooltip': 'Напоминание об ингаляторе',
 
-  // --- Доступность (только для скринридеров) ---
   'a11y.history': 'История приёмов за последние 14 дней',
   'a11y.appearance': 'Оформление',
   'a11y.language': 'Язык интерфейса',
@@ -107,6 +107,6 @@ module.exports = {
   'a11y.timeLater': 'Позже на 15 минут',
   'a11y.decrease': 'Уменьшить',
   'a11y.increase': 'Увеличить',
-  'a11y.expandMorning': 'Настройки утреннего напоминания',
-  'a11y.expandEvening': 'Настройки вечернего напоминания'
+  'a11y.addWindow': 'Добавить окно',
+  'a11y.removeWindow': 'Удалить окно'
 };
