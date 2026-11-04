@@ -606,7 +606,8 @@
       var target = event.target;
       var dayButton = target && target.closest ? target.closest('[data-date]') : null;
       if (!dayButton) return;
-      selectedDay = dayButton.dataset.date;
+      var date = dayButton.dataset.date;
+      selectedDay = (selectedDay === date) ? null : date;
       renderWeekGrid();
       renderWeekDetail();
     });
