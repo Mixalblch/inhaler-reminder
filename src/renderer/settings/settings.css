@@ -836,3 +836,45 @@ select:focus-visible {
     transition-duration: .01ms !important;
   }
 }
+
+/* History columns keep their own space as schedules grow. Narrow layouts
+   become day cards, so names and correction buttons never compete for a column. */
+.history-card { overflow-x: auto; }
+.history-table { min-width: calc(66px + var(--history-columns, 1) * 132px); }
+.history-row {
+  display: grid;
+  grid-template-columns: 58px repeat(var(--history-columns, 1), minmax(124px, 1fr));
+  align-items: start;
+  padding-block: 6px;
+}
+.history-cell { flex-wrap: wrap; min-width: 0; min-height: 32px; }
+.history-col { white-space: normal; overflow-wrap: anywhere; }
+.history-dose-name { display: none; }
+.history-status { font-size: 11px; color: var(--secondary); overflow-wrap: anywhere; }
+.cell-action { min-height: 32px; white-space: normal; overflow-wrap: anywhere; }
+.today-status-dots { max-width: 40%; flex-wrap: wrap; justify-content: flex-end; }
+.section, .card, .setting-row > * { min-width: 0; }
+
+@media (max-width: 430px) {
+  .history-table { min-width: 0; gap: 10px; }
+  .history-row { grid-template-columns: minmax(0, 1fr); gap: 8px; padding-block: 8px; }
+  .history-row + .history-row { border-top: 1px solid var(--divider-soft); }
+  .history-row.history-header { display: none; }
+  .history-date { width: auto; font-weight: 700; font-size: 12px; }
+  .history-dose-name { display: block; flex: 1 0 100%; overflow-wrap: anywhere; font-size: 12px; }
+  .history-cell { gap: 8px; padding-block: 4px; align-items: center; }
+  .history-status { flex: 1; min-width: 0; }
+  .history-heading { gap: 8px; flex-wrap: wrap; }
+  .window-row-top { flex-wrap: wrap; }
+  .window-name { flex-basis: calc(100% - 30px); }
+  .window-row-top .switch { margin-left: 19px; }
+  .setting-row { flex-wrap: wrap; }
+  .segmented { max-width: 100%; flex-wrap: wrap; }
+  .topbar, .footer { padding-inline: 14px; }
+}
+
+@media (max-width: 360px) {
+  .content { padding-inline: 10px; }
+  .window-row { padding-inline: 10px; }
+  .today-heading h1 { font-size: 19px; }
+}

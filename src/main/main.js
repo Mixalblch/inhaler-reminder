@@ -117,7 +117,7 @@ function createSettingsWindow() {
   settingsWindow = new BrowserWindow({
     width: SETTINGS_WIDTH,
     height: Math.min(SETTINGS_HEIGHT, Math.max(600, workArea.height - 72)),
-    minWidth: 380,
+    minWidth: 320,
     minHeight: 480,
     useContentSize: true,
     title: 'Inhaler Reminder',

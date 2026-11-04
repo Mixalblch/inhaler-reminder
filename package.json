@@ -13,6 +13,7 @@
     "test:autostart": "node scripts/autostart-test.js",
     "test:inhaler": "node scripts/inhaler-test.js",
     "design-check": "node scripts/design-check.js",
+    "test:layout": "electron scripts/history-layout-test.js",
     "test": "npm run test:config && npm run test:history && npm run test:scheduler && npm run test:autostart && npm run test:inhaler && npm run design-check",
     "render-icon": "electron scripts/render-icon.js",
     "capture": "electron . --capture-dir=qa",
