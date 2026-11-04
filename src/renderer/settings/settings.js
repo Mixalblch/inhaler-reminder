@@ -368,6 +368,7 @@
     table.textContent = '';
 
     var windows = config.windows;
+    table.style.setProperty('--history-columns', String(Math.max(1, windows.length)));
 
     var header = document.createElement('div');
     header.className = 'history-row history-header';
@@ -393,15 +394,23 @@
       date.textContent = shortDate(day.date);
       row.appendChild(date);
 
-      windows.forEach(function (w) {
+      windows.forEach(function (w, index) {
         var cell = document.createElement('span');
         cell.className = 'history-cell';
+        var name = document.createElement('span');
+        name.className = 'history-dose-name';
+        name.textContent = windowDisplayName(w, index);
+        cell.appendChild(name);
 
         var status = day[w.id] || 'unknown';
         var dot = document.createElement('span');
         dot.className = 'history-dot ' + status;
         dot.title = shortDate(day.date) + ' · ' + t('dot.' + status);
         cell.appendChild(dot);
+        var stateLabel = document.createElement('span');
+        stateLabel.className = 'history-status';
+        stateLabel.textContent = t('dot.' + status);
+        cell.appendChild(stateLabel);
 
         if (status === 'missed') {
           cell.appendChild(actionButton('mark', day.date, w.id, t('history.mark')));

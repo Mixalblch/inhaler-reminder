@@ -49,6 +49,9 @@ jobs:
       - name: Test
         run: npm test
 
+      - name: Check history layout at phone proportions
+        run: npm run test:layout
+
       # Catches a main-process crash that unit tests cannot see.
       - name: Smoke-test the packaged entry point
         run: npm run smoke
