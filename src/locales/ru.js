@@ -12,7 +12,8 @@ module.exports = {
   'today.allOff': 'Все напоминания выключены',
   'today.reviewDay': 'День завершён',
 
-  'history.title': 'Последние 14 дней',
+  'history.title': 'История',
+  'history.today': 'Сегодня',
   'history.of': 'из',
   'history.noData': 'пока нет данных',
   'history.missedDescription': 'Бывает. Можно отметить задним числом.',
@@ -100,7 +101,9 @@ module.exports = {
   'tray.quit': 'Выйти',
   'tray.tooltip': 'Напоминание об ингаляторе',
 
-  'a11y.history': 'История приёмов за последние 14 дней',
+  'a11y.history': 'История приёмов',
+  'a11y.prevWeek': 'Предыдущая неделя',
+  'a11y.nextWeek': 'Следующая неделя',
   'a11y.appearance': 'Оформление',
   'a11y.language': 'Язык интерфейса',
   'a11y.timeEarlier': 'Раньше на 15 минут',

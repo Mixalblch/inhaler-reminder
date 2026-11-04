@@ -83,11 +83,18 @@
       <!-- History -->
       <section class="section" aria-labelledby="historyLabel">
         <div class="history-heading">
-          <h2 class="section-title" id="historyLabel" data-i18n="history.title">Последние 14 дней</h2>
-          <span class="history-score" id="historyScore"></span>
+          <h2 class="section-title" id="historyLabel" data-i18n="history.title">История</h2>
+          <div class="week-nav">
+            <button type="button" class="week-nav-button" id="weekPrev" data-i18n-aria="a11y.prevWeek">‹</button>
+            <span class="week-nav-label" id="weekLabel"></span>
+            <button type="button" class="week-nav-button" id="weekNext" data-i18n-aria="a11y.nextWeek">›</button>
+            <button type="button" class="week-today" id="weekToday" data-i18n="history.today">Сегодня</button>
+          </div>
         </div>
         <div class="card history-card">
-          <div class="history-table" id="historyTable" role="group" data-i18n-aria="a11y.history"></div>
+          <div class="week-grid" id="weekGrid" role="grid" data-i18n-aria="a11y.history"></div>
+          <div class="week-detail" id="weekDetail" hidden></div>
+          <div class="week-score" id="historyScore"></div>
         </div>
       </section>
 

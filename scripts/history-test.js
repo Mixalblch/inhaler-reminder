@@ -73,6 +73,14 @@ history.confirm('2026-08-27', 'w2', { backdated: true });
 history.reconcileScheduleChange(widened, new Date(2026, 7, 27, 23, 30));
 assert.strictEqual(history.getDay('2026-08-27').w2.status, 'confirmed');
 
+// --- week view spans Monday..Sunday -------------------------------------------
+const wk = history.week(config, '2026-08-27');
+assert.strictEqual(wk.days.length, 7, 'a week has 7 days');
+assert.ok(wk.days.some(function (d) { return d.date === '2026-08-27'; }), 'the week contains the anchor day');
+const first = wk.days[0].date.split('-').map(Number);
+assert.strictEqual(new Date(first[0], first[1] - 1, first[2]).getDay(), 1, 'the week starts on Monday');
+assert.strictEqual(wk.windows.length, 2);
+
 // --- disabled windows leave the denominator ------------------------------------
 const eveningOff = JSON.parse(JSON.stringify(config));
 eveningOff.windows[1].enabled = false;

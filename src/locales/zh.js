@@ -12,7 +12,8 @@ module.exports = {
   'today.allOff': '所有提醒已关闭',
   'today.reviewDay': '今天已完成',
 
-  'history.title': '最近 14 天',
+  'history.title': '历史',
+  'history.today': '今天',
   'history.of': '/',
   'history.noData': '暂无数据',
   'history.missedDescription': '难免会忘记，可以补记。',
@@ -100,7 +101,9 @@ module.exports = {
   'tray.quit': '退出',
   'tray.tooltip': '吸入器提醒',
 
-  'a11y.history': '最近 14 天的服药记录',
+  'a11y.history': '服药记录',
+  'a11y.prevWeek': '上一周',
+  'a11y.nextWeek': '下一周',
   'a11y.appearance': '外观',
   'a11y.language': '界面语言',
   'a11y.timeEarlier': '提前 15 分钟',

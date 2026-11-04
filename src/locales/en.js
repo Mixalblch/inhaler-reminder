@@ -12,7 +12,8 @@ module.exports = {
   'today.allOff': 'All reminders are off',
   'today.reviewDay': 'Day complete',
 
-  'history.title': 'Last 14 days',
+  'history.title': 'History',
+  'history.today': 'Today',
   'history.of': 'of',
   'history.noData': 'no data yet',
   'history.missedDescription': 'It happens. You can mark it retroactively.',
@@ -100,7 +101,9 @@ module.exports = {
   'tray.quit': 'Quit',
   'tray.tooltip': 'Inhaler Reminder',
 
-  'a11y.history': 'Adherence history for the last 14 days',
+  'a11y.history': 'Adherence history',
+  'a11y.prevWeek': 'Previous week',
+  'a11y.nextWeek': 'Next week',
   'a11y.appearance': 'Appearance',
   'a11y.language': 'Interface language',
   'a11y.timeEarlier': '15 minutes earlier',

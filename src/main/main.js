@@ -387,6 +387,10 @@ ipcMain.handle('inhaler:replace', function (_e, total) {
 
 ipcMain.handle('history:summary', function () { return historySummary(); });
 
+ipcMain.handle('history:week', function (_e, anchorKey) {
+  return history.week(config.get(), anchorKey);
+});
+
 ipcMain.handle('history:backdate', function (_e, payload) {
   const p = payload || {};
   const day = history.getDay(p.date);

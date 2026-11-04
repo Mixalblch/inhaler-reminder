@@ -14,6 +14,10 @@
   var clockTimer = null;
   var backdated = null;   // { date, id } while a retroactive mark's undo affordance shows
   var lastWindowsSig = null;
+  var weekAnchor = null;      // Monday of the displayed week
+  var weekData = null;        // week payload from getHistoryWeek
+  var selectedDay = null;     // 'YYYY-MM-DD' of the clicked day
+  var weekToken = 0;          // guards against out-of-order week fetches
 
   function t(key) { return STR[key] || key; }
   function el(id) { return document.getElementById(id); }
@@ -343,12 +347,35 @@
 
   // ---------- rendering: history ----------
 
-  function historyStillBackdated(summary, target) {
-    var found = false;
-    summary.days.forEach(function (d) {
-      if (d.date === target.date && d[target.id] === 'confirmed') found = true;
-    });
-    return found;
+  function dayKey(date) {
+    return date.getFullYear() + '-' +
+      String(date.getMonth() + 1).padStart(2, '0') + '-' +
+      String(date.getDate()).padStart(2, '0');
+  }
+
+  function weekMonday(date) {
+    var d = new Date(date.getFullYear(), date.getMonth(), date.getDate(), 12);
+    var day = d.getDay();
+    d.setDate(d.getDate() + (day === 0 ? -6 : 1 - day));
+    return d;
+  }
+
+  function weekLabelText(monday) {
+    var sunday = new Date(monday.getFullYear(), monday.getMonth(), monday.getDate() + 6, 12);
+    var loc = locale();
+    var dm = new Intl.DateTimeFormat(loc, { day: 'numeric', month: 'short' });
+    var year = new Intl.DateTimeFormat(loc, { year: 'numeric' });
+    return dm.format(monday).replace(/\./g, '') + ' – ' +
+      dm.format(sunday).replace(/\./g, '') + ' ' + year.format(sunday);
+  }
+
+  function weekdayShort(date) {
+    return new Intl.DateTimeFormat(locale(), { weekday: 'short' }).format(date);
+  }
+
+  function statusText(status) {
+    if (status === 'unknown') return t('history.noData');
+    return t('status.' + status);
   }
 
   function actionButton(action, date, id, label) {
@@ -362,76 +389,138 @@
     return btn;
   }
 
-  function renderHistory() {
-    if (!history || !config) return;
-    var table = el('historyTable');
-    table.textContent = '';
+  function renderWeekLabel() {
+    el('weekLabel').textContent = weekAnchor ? weekLabelText(weekAnchor) : '';
+    var currentMonday = weekMonday(new Date());
+    el('weekNext').disabled = !weekAnchor || weekAnchor.getTime() >= currentMonday.getTime();
+  }
 
-    var windows = config.windows;
-    table.style.setProperty('--history-columns', String(Math.max(1, windows.length)));
+  function renderWeekGrid() {
+    var grid = el('weekGrid');
+    grid.textContent = '';
+    if (!weekData) return;
 
     var header = document.createElement('div');
-    header.className = 'history-row history-header';
-    var headerDate = document.createElement('span');
-    headerDate.className = 'history-date';
-    header.appendChild(headerDate);
-    windows.forEach(function (w, i) {
+    header.className = 'week-header';
+    weekData.days.forEach(function (day) {
       var cell = document.createElement('span');
-      cell.className = 'history-cell history-col';
-      cell.textContent = windowDisplayName(w, i);
+      cell.className = 'week-weekday';
+      cell.textContent = weekdayShort(parseDay(day.date));
       header.appendChild(cell);
     });
-    table.appendChild(header);
+    grid.appendChild(header);
 
-    // Most recent day on top.
-    for (var i = history.days.length - 1; i >= 0; i--) {
-      var day = history.days[i];
-      var row = document.createElement('div');
-      row.className = 'history-row';
+    var row = document.createElement('div');
+    row.className = 'week-row';
+    weekData.days.forEach(function (day) {
+      var cell = document.createElement('button');
+      cell.type = 'button';
+      cell.className = 'week-day';
+      cell.dataset.date = day.date;
+      cell.setAttribute('aria-label', shortDate(day.date));
+      if (day.date === weekData.today) cell.classList.add('is-today');
+      if (selectedDay === day.date) cell.classList.add('is-selected');
 
-      var date = document.createElement('span');
-      date.className = 'history-date';
-      date.textContent = shortDate(day.date);
-      row.appendChild(date);
+      var num = document.createElement('span');
+      num.className = 'week-day-number';
+      num.textContent = String(parseDay(day.date).getDate());
+      cell.appendChild(num);
 
-      windows.forEach(function (w, index) {
-        var cell = document.createElement('span');
-        cell.className = 'history-cell';
-        var name = document.createElement('span');
-        name.className = 'history-dose-name';
-        name.textContent = windowDisplayName(w, index);
-        cell.appendChild(name);
-
+      var dots = document.createElement('span');
+      dots.className = 'week-day-dots';
+      weekData.windows.forEach(function (w, index) {
+        if (index >= 4) return;
         var status = day[w.id] || 'unknown';
         var dot = document.createElement('span');
-        dot.className = 'history-dot ' + status;
-        dot.title = shortDate(day.date) + ' · ' + t('dot.' + status);
-        cell.appendChild(dot);
-        var stateLabel = document.createElement('span');
-        stateLabel.className = 'history-status';
-        stateLabel.textContent = t('dot.' + status);
-        cell.appendChild(stateLabel);
-
-        if (status === 'missed') {
-          cell.appendChild(actionButton('mark', day.date, w.id, t('history.mark')));
-        } else if (backdated && backdated.date === day.date && backdated.id === w.id) {
-          cell.appendChild(actionButton('undo', day.date, w.id, t('history.undo')));
-        }
-
-        row.appendChild(cell);
+        dot.className = 'week-dot ' + status;
+        dot.title = shortDate(day.date) + ' · ' + windowDisplayName(w, index) + ' · ' + t('dot.' + status);
+        dots.appendChild(dot);
       });
+      if (weekData.windows.length > 4) {
+        var more = document.createElement('span');
+        more.className = 'week-dot-more';
+        more.textContent = '+' + (weekData.windows.length - 4);
+        dots.appendChild(more);
+      }
+      cell.appendChild(dots);
+      row.appendChild(cell);
+    });
+    grid.appendChild(row);
+  }
 
-      table.appendChild(row);
-    }
+  function renderWeekDetail() {
+    var detail = el('weekDetail');
+    detail.textContent = '';
+    if (!selectedDay || !weekData) { detail.hidden = true; return; }
 
-    el('historyScore').textContent = history.trackedCount
-      ? history.confirmedCount + ' ' + t('history.of') + ' ' + history.trackedCount
+    var day = null;
+    weekData.days.forEach(function (d) { if (d.date === selectedDay) day = d; });
+    if (!day) { detail.hidden = true; return; }
+
+    detail.hidden = false;
+
+    var head = document.createElement('div');
+    head.className = 'week-detail-head';
+    head.textContent = shortDate(day.date);
+    detail.appendChild(head);
+
+    weekData.windows.forEach(function (w, index) {
+      var row = document.createElement('div');
+      row.className = 'week-detail-row';
+
+      var info = document.createElement('div');
+      info.className = 'week-detail-info';
+      var name = document.createElement('span');
+      name.className = 'week-detail-name';
+      name.textContent = windowDisplayName(w, index);
+      info.appendChild(name);
+      var time = document.createElement('span');
+      time.className = 'week-detail-time';
+      time.textContent = w.start + '–' + w.end;
+      info.appendChild(time);
+      row.appendChild(info);
+
+      var status = day[w.id] || 'unknown';
+      var label = document.createElement('span');
+      label.className = 'week-detail-status ' + status;
+      label.textContent = statusText(status);
+      row.appendChild(label);
+
+      if (status === 'missed') {
+        row.appendChild(actionButton('mark', day.date, w.id, t('history.mark')));
+      } else if (backdated && backdated.date === day.date && backdated.id === w.id) {
+        row.appendChild(actionButton('undo', day.date, w.id, t('history.undo')));
+      }
+
+      detail.appendChild(row);
+    });
+  }
+
+  function renderWeekScore() {
+    el('historyScore').textContent = (weekData && weekData.trackedCount)
+      ? weekData.confirmedCount + ' ' + t('history.of') + ' ' + weekData.trackedCount
       : t('history.noData');
+  }
+
+  function renderWeek() {
+    if (!config) return;
+    if (!weekAnchor) weekAnchor = weekMonday(new Date());
+    var token = ++weekToken;
+    return window.api.getHistoryWeek(dayKey(weekAnchor)).then(function (data) {
+      if (token !== weekToken) return;
+      weekData = data;
+      renderWeekLabel();
+      renderWeekGrid();
+      renderWeekDetail();
+      renderWeekScore();
+    }).catch(function (error) {
+      console.error('getHistoryWeek failed', error);
+    });
   }
 
   function renderData() {
     renderToday();
-    renderHistory();
+    renderWeek();
   }
 
   // ---------- rendering: controls ----------
@@ -513,30 +602,52 @@
 
     el('addWindowBtn').addEventListener('click', addWindow);
 
-    el('historyTable').addEventListener('click', function (event) {
+    el('weekGrid').addEventListener('click', function (event) {
+      var target = event.target;
+      var dayButton = target && target.closest ? target.closest('[data-date]') : null;
+      if (!dayButton) return;
+      selectedDay = dayButton.dataset.date;
+      renderWeekGrid();
+      renderWeekDetail();
+    });
+
+    el('weekDetail').addEventListener('click', function (event) {
       var target = event.target;
       var btn = target && target.closest ? target.closest('[data-action]') : null;
       if (!btn) return;
       var action = btn.dataset.action;
       var date = btn.dataset.date;
       var id = btn.dataset.id;
-      if (action === 'mark') {
-        window.api.backdateDose(date, id).then(function (result) {
-          if (!result || !result.ok) return;
-          history = result.summary;
-          backdated = { date: date, id: id };
-          renderData();
-          showSaved();
-        });
-      } else if (action === 'undo') {
-        window.api.undoBackdate(date, id).then(function (result) {
-          if (!result || !result.ok) return;
-          history = result.summary;
-          backdated = null;
-          renderData();
-          showSaved();
-        });
+      var call = action === 'mark'
+        ? window.api.backdateDose(date, id)
+        : window.api.undoBackdate(date, id);
+      call.then(function (result) {
+        if (!result || !result.ok) return;
+        backdated = action === 'mark' ? { date: date, id: id } : null;
+        showSaved();
+        return renderWeek();
+      });
+    });
+
+    el('weekPrev').addEventListener('click', function () {
+      if (!weekAnchor) weekAnchor = weekMonday(new Date());
+      weekAnchor = new Date(weekAnchor.getFullYear(), weekAnchor.getMonth(), weekAnchor.getDate() - 7, 12);
+      renderWeek();
+    });
+
+    el('weekNext').addEventListener('click', function () {
+      if (!weekAnchor) weekAnchor = weekMonday(new Date());
+      var next = new Date(weekAnchor.getFullYear(), weekAnchor.getMonth(), weekAnchor.getDate() + 7, 12);
+      if (next.getTime() <= weekMonday(new Date()).getTime()) {
+        weekAnchor = next;
+        renderWeek();
       }
+    });
+
+    el('weekToday').addEventListener('click', function () {
+      weekAnchor = weekMonday(new Date());
+      selectedDay = weekData ? weekData.today : dayKey(new Date());
+      renderWeek();
     });
 
     document.querySelectorAll('[data-number-step]').forEach(function (button) {
@@ -642,12 +753,13 @@
       config = await window.api.getConfig();
       history = await window.api.getHistorySummary();
       inhaler = await window.api.getInhaler();
+      weekAnchor = weekMonday(new Date());
 
       window.api.onConfigChanged(handleConfigChanged);
       window.api.onHistoryChanged(function (summary) {
         history = summary;
-        if (backdated && !historyStillBackdated(summary, backdated)) backdated = null;
-        renderData();
+        renderToday();
+        renderWeek();
       });
       window.api.onInhalerChanged(function (state) {
         inhaler = state;

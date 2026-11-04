@@ -16,6 +16,7 @@ contextBridge.exposeInMainWorld('api', {
   getInhaler: function () { return ipcRenderer.invoke('inhaler:get'); },
   replaceInhaler: function (total) { return ipcRenderer.invoke('inhaler:replace', total); },
   getHistorySummary: function () { return ipcRenderer.invoke('history:summary'); },
+  getHistoryWeek: function (anchorKey) { return ipcRenderer.invoke('history:week', anchorKey); },
   backdateDose: function (date, id) { return ipcRenderer.invoke('history:backdate', { date: date, dose: id }); },
   undoBackdate: function (date, id) { return ipcRenderer.invoke('history:undo-backdate', { date: date, dose: id }); },
   hideToTray: function () { ipcRenderer.send('window:hide'); },

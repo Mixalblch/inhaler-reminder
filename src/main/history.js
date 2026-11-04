@@ -266,6 +266,57 @@ function summary(config, value, count) {
   };
 }
 
+// One week (Monday-Sunday) of per-day, per-window statuses for the calendar.
+// anchorKey is any day-key inside the desired week.
+function week(config, anchorKey) {
+  const anchor = schedule.dateFromDayKey(anchorKey) || new Date();
+  sync(config, new Date());
+  const store = load();
+  const ids = schedule.windowIds(config);
+
+  const day = anchor.getDay();
+  const offset = (day === 0 ? -6 : 1 - day);
+  const monday = new Date(anchor.getFullYear(), anchor.getMonth(), anchor.getDate() + offset, 12);
+
+  const days = [];
+  let confirmed = 0;
+  let tracked = 0;
+
+  for (let i = 0; i < 7; i++) {
+    const d = new Date(monday.getFullYear(), monday.getMonth(), monday.getDate() + i, 12);
+    const key = schedule.localDayKey(d);
+    const stored = store.days[key] || {};
+    const item = { date: key };
+    ids.forEach(function (id) {
+      const entry = stored[id];
+      item[id] = entry ? entry.status : 'unknown';
+      if (entry && (entry.status === 'confirmed' || entry.status === 'missed' || entry.status === 'pending')) {
+        tracked += 1;
+        if (entry.status === 'confirmed') confirmed += 1;
+      }
+    });
+    days.push(item);
+  }
+
+  return {
+    today: schedule.localDayKey(new Date()),
+    weekStart: schedule.localDayKey(monday),
+    windows: ids.map(function (id) {
+      const win = schedule.windowFor(config, id);
+      return {
+        id: id,
+        name: win ? win.name : '',
+        enabled: win ? win.enabled : false,
+        start: win ? win.start : '',
+        end: win ? win.end : ''
+      };
+    }),
+    days: days,
+    confirmedCount: confirmed,
+    trackedCount: tracked
+  };
+}
+
 function setFilePathForTests(target) {
   filePathOverride = target;
   cached = null;
@@ -288,6 +339,7 @@ module.exports = {
   reconcileScheduleChange: reconcileScheduleChange,
   undoBackdate: undoBackdate,
   undoTodayConfirmation: undoTodayConfirmation,
+  week: week,
   _setFilePathForTests: setFilePathForTests,
   _resetForTests: resetForTests
 };

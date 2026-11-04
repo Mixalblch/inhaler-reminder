@@ -12,7 +12,8 @@ module.exports = {
   'today.allOff': 'リマインダーはすべてオフです',
   'today.reviewDay': '本日分は完了です',
 
-  'history.title': '直近14日間',
+  'history.title': '履歴',
+  'history.today': '今日',
   'history.of': '／',
   'history.noData': 'まだデータがありません',
   'history.missedDescription': 'よくあることです。後から記録できます。',
@@ -100,7 +101,9 @@ module.exports = {
   'tray.quit': '終了',
   'tray.tooltip': '吸入リマインダー',
 
-  'a11y.history': '直近14日間の服用履歴',
+  'a11y.history': '服用履歴',
+  'a11y.prevWeek': '前の週',
+  'a11y.nextWeek': '次の週',
   'a11y.appearance': '外観',
   'a11y.language': 'インターフェース言語',
   'a11y.timeEarlier': '15分早める',

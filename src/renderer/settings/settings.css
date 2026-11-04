@@ -549,84 +549,198 @@ select:focus-visible {
   color: var(--on-accent);
 }
 
-/* ---------- history ---------- */
+/* ---------- week calendar ---------- */
 
 .history-heading {
   display: flex;
   align-items: baseline;
   justify-content: space-between;
+  gap: 8px;
+  flex-wrap: wrap;
 }
 
 .history-heading .section-title { margin: 0 0 0 2px; }
 
-.history-score {
-  color: var(--secondary);
-  font-size: 11px;
-  font-variant-numeric: tabular-nums;
-}
-
-.history-card { padding: 10px 14px 12px; }
-
-.history-table {
-  display: flex;
-  flex-direction: column;
-  gap: 3px;
-}
-
-.history-row {
+.week-nav {
   display: flex;
   align-items: center;
-  gap: 8px;
-  min-height: 24px;
+  gap: 4px;
 }
 
-.history-row.history-header {
-  min-height: 20px;
-  margin-bottom: 2px;
-  padding-bottom: 4px;
-  border-bottom: 1px solid var(--divider-soft);
+.week-nav-button {
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  border: 0;
+  border-radius: 7px;
+  background: var(--field);
+  color: var(--text);
+  font-size: 14px;
+  line-height: 1;
+  cursor: pointer;
 }
 
-.history-date {
-  flex: none;
-  width: 58px;
+.week-nav-button:hover { opacity: .7; }
+.week-nav-button:disabled { opacity: .28; cursor: default; }
+
+.week-nav-label {
+  min-width: 78px;
+  text-align: center;
   color: var(--secondary);
   font-size: 11px;
   font-variant-numeric: tabular-nums;
-}
-
-.history-col {
-  color: var(--secondary);
-  font-size: 10.5px;
-  font-weight: 600;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
-.history-cell {
-  flex: 1 1 0;
-  min-width: 0;
-  display: flex;
-  align-items: center;
-  gap: 6px;
+.week-today {
+  padding: 2px 8px;
+  border: 1px solid var(--hairline);
+  border-radius: 7px;
+  background: transparent;
+  color: var(--secondary);
+  font-size: 10.5px;
+  font-weight: 600;
+  cursor: pointer;
 }
 
-.history-dot {
-  flex: none;
-  width: 9px;
-  height: 9px;
+.week-today:hover { color: var(--text); }
+
+.history-card { padding: 10px 12px; }
+
+.week-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.week-header,
+.week-row {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 3px;
+}
+
+.week-weekday {
+  color: var(--secondary);
+  font-size: 10px;
+  font-weight: 600;
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.week-day {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  min-width: 0;
+  padding: 5px 2px 4px;
+  border: 1px solid var(--divider-soft);
+  border-radius: 9px;
+  background: transparent;
+  color: var(--text);
+  cursor: pointer;
+}
+
+.week-day.is-today { border-color: var(--accent); }
+.week-day.is-selected { background: var(--field); }
+
+.week-day-number {
+  font-size: 12.5px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+}
+
+.week-day-dots {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 2px;
+  min-height: 5px;
+}
+
+.week-dot {
+  width: 5px;
+  height: 5px;
   border-radius: 999px;
 }
 
-.history-dot.confirmed { background: var(--dot-taken); }
-.history-dot.missed { background: var(--dot-missed); }
-.history-dot.pending { box-shadow: inset 0 0 0 1.5px var(--dot-ring); }
-.history-dot.disabled,
-.history-dot.unknown { box-shadow: inset 0 0 0 1.5px var(--dot-ring); opacity: .4; }
+.week-dot.confirmed { background: var(--dot-taken); }
+.week-dot.missed { background: var(--dot-missed); }
+.week-dot.pending { box-shadow: inset 0 0 0 1.2px var(--dot-ring); }
+.week-dot.disabled,
+.week-dot.unknown { box-shadow: inset 0 0 0 1.2px var(--dot-ring); opacity: .35; }
+
+.week-dot-more {
+  font-size: 8px;
+  color: var(--secondary);
+  line-height: 1;
+}
+
+.week-detail {
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid var(--divider-soft);
+}
+
+.week-detail[hidden] { display: none; }
+
+.week-detail-head {
+  margin-bottom: 4px;
+  color: var(--secondary);
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.week-detail-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 32px;
+}
+
+.week-detail-info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.week-detail-name {
+  font-size: 12.5px;
+  font-weight: 500;
+  overflow-wrap: anywhere;
+}
+
+.week-detail-time {
+  color: var(--secondary);
+  font-size: 10.5px;
+  font-variant-numeric: tabular-nums;
+}
+
+.week-detail-status {
+  flex: none;
+  color: var(--secondary);
+  font-size: 11px;
+}
+
+.week-detail-status.confirmed { color: var(--accent); }
+
+.week-score {
+  margin-top: 8px;
+  color: var(--secondary);
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+}
 
 .cell-action {
-  padding: 1px 7px;
+  flex: none;
+  padding: 3px 8px;
   border: 1px solid var(--hairline);
   border-radius: 6px;
   background: transparent;
@@ -837,34 +951,15 @@ select:focus-visible {
   }
 }
 
-/* History columns keep their own space as schedules grow. Narrow layouts
-   become day cards, so names and correction buttons never compete for a column. */
-.history-card { overflow-x: auto; }
-.history-table { min-width: calc(66px + var(--history-columns, 1) * 132px); }
-.history-row {
-  display: grid;
-  grid-template-columns: 58px repeat(var(--history-columns, 1), minmax(124px, 1fr));
-  align-items: start;
-  padding-block: 6px;
-}
-.history-cell { flex-wrap: wrap; min-width: 0; min-height: 32px; }
-.history-col { white-space: normal; overflow-wrap: anywhere; }
-.history-dose-name { display: none; }
-.history-status { font-size: 11px; color: var(--secondary); overflow-wrap: anywhere; }
-.cell-action { min-height: 32px; white-space: normal; overflow-wrap: anywhere; }
+.cell-action { min-height: 30px; }
 .today-status-dots { max-width: 40%; flex-wrap: wrap; justify-content: flex-end; }
 .section, .card, .setting-row > * { min-width: 0; }
 
 @media (max-width: 430px) {
-  .history-table { min-width: 0; gap: 10px; }
-  .history-row { grid-template-columns: minmax(0, 1fr); gap: 8px; padding-block: 8px; }
-  .history-row + .history-row { border-top: 1px solid var(--divider-soft); }
-  .history-row.history-header { display: none; }
-  .history-date { width: auto; font-weight: 700; font-size: 12px; }
-  .history-dose-name { display: block; flex: 1 0 100%; overflow-wrap: anywhere; font-size: 12px; }
-  .history-cell { gap: 8px; padding-block: 4px; align-items: center; }
-  .history-status { flex: 1; min-width: 0; }
-  .history-heading { gap: 8px; flex-wrap: wrap; }
+  .history-heading { gap: 8px; }
+  .week-nav-label { min-width: 64px; font-size: 10.5px; }
+  .week-nav-button { width: 22px; height: 22px; }
+  .week-today { padding: 2px 6px; font-size: 10px; }
   .window-row-top { flex-wrap: wrap; }
   .window-name { flex-basis: calc(100% - 30px); }
   .window-row-top .switch { margin-left: 19px; }
